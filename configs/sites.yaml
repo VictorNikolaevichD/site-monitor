@@ -20,3 +20,4 @@ sites:
   - url: https://kremlin.ru
     name: Кремль
 interval: 60s
+http_addr: :8080

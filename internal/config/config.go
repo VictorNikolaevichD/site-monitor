@@ -16,6 +16,7 @@ type Site struct {
 type Config struct {
 	Sites    []Site        `yaml:"sites"`
 	Interval time.Duration `yaml:"interval"`
+	HTTPAddr string        `yaml:"http_addr"`
 }
 
 func Load(path string) (*Config, error) {
