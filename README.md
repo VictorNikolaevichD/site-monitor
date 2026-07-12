@@ -13,5 +13,5 @@ go build ./...
 ### Запуск сервиса
 
 ```
-go run cmd/monitor/main.go
+go run cmd/monitor/main.go -config configs/sites.yaml
 ```
