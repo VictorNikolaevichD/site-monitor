@@ -4,8 +4,8 @@ import (
 	"flag"
 	"fmt"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/scheduler"
 )
 
 func main() {
@@ -20,14 +20,6 @@ func main() {
 		return
 	}
 
-	var result checker.Result
-	for _, v := range cfg.Sites {
-		result = checker.CheckSite(v.URL)
-
-		if result.Error != nil || !result.AvailabilityStatus {
-			fmt.Printf("Site %s NOT ok\n", v.URL)
-		} else {
-			fmt.Printf("Site %s ok\n", v.URL)
-		}
-	}
+	sh := scheduler.New(cfg.Sites, cfg.Interval)
+	sh.Start()
 }
