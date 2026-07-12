@@ -11,8 +11,8 @@ import (
 type Scheduler struct {
 	sites    []config.Site
 	interval time.Duration
-	isActive bool
 	stop     chan struct{}
+	done     chan struct{}
 }
 
 func New(sites []config.Site, interval time.Duration) *Scheduler {
@@ -23,26 +23,31 @@ func New(sites []config.Site, interval time.Duration) *Scheduler {
 }
 
 func (s *Scheduler) Start() {
-	if s.isActive {
+	if s.stop != nil || s.done != nil {
 		return
 	}
 
-	s.isActive = true
-	s.schedule()
+	s.stop = make(chan struct{})
+	s.done = make(chan struct{})
+
+	go s.schedule()
 }
 
 func (s *Scheduler) Stop() {
-	if !s.isActive {
+	fmt.Println("Shutting down...")
+
+	if s.stop == nil || s.done == nil {
 		return
 	}
 
-	s.stop <- struct{}{}
 	close(s.stop)
-	s.isActive = false
+	<-s.done
 }
 
 func (s *Scheduler) schedule() {
 	ticker := time.NewTicker(s.interval)
+	defer ticker.Stop()
+	defer close(s.done)
 
 	s.checkSites()
 	for {
@@ -50,7 +55,6 @@ func (s *Scheduler) schedule() {
 		case <-ticker.C:
 			s.checkSites()
 		case <-s.stop:
-			ticker.Stop()
 			return
 		}
 	}
