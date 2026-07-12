@@ -1,0 +1,31 @@
+# Бинарные файлы
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Результаты сборки
+/bin/
+/build/
+/dist/
+
+# Тестовые бинарники
+*.test
+
+# Профили и покрытие
+*.out
+coverage.*
+
+# Локальные конфиги
+.env
+.env.*
+config.local.yaml
+
+# IDE
+.idea/
+.vscode/
+
+# ОС
+.DS_Store
+Thumbs.db
