@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
 	"syscall"
@@ -12,7 +12,9 @@ import (
 )
 
 func main() {
-	fmt.Println("Site Monitor started. Press Ctrl+C to stop.")
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+
+	logger.Info("site monitor started.")
 
 	signals := make(chan os.Signal, 1)
 
@@ -23,15 +25,23 @@ func main() {
 
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		fmt.Printf("Site Monitor Error: %s\n", err)
+		logger.Error("failed to load config", "error", err, "config_path", *configPath)
 		return
 	}
 
-	sh := scheduler.New(cfg.Sites, cfg.Interval)
+	logger.Info("config parsed", "sites_count", len(cfg.Sites), "interval", cfg.Interval)
+
+	sh := scheduler.New(cfg.Sites, cfg.Interval, logger)
 	sh.Start()
 
-	<-signals
+	sig := <-signals
+
+	logger.Info(
+		"shutdown signal received",
+		"signal", sig.String(),
+	)
+
 	sh.Stop()
 
-	fmt.Println("Site Monitor stopped.")
+	logger.Info("site monitor stopped.")
 }

@@ -1,7 +1,7 @@
 package scheduler
 
 import (
-	"fmt"
+	"log/slog"
 	"time"
 
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
@@ -13,12 +13,14 @@ type Scheduler struct {
 	interval time.Duration
 	stop     chan struct{}
 	done     chan struct{}
+	logger   *slog.Logger
 }
 
-func New(sites []config.Site, interval time.Duration) *Scheduler {
+func New(sites []config.Site, interval time.Duration, logger *slog.Logger) *Scheduler {
 	return &Scheduler{
 		sites:    sites,
 		interval: interval,
+		logger:   logger,
 	}
 }
 
@@ -34,7 +36,7 @@ func (s *Scheduler) Start() {
 }
 
 func (s *Scheduler) Stop() {
-	fmt.Println("Shutting down...")
+	s.logger.Info("shutting down...")
 
 	if s.stop == nil || s.done == nil {
 		return
@@ -63,14 +65,18 @@ func (s *Scheduler) schedule() {
 func (s *Scheduler) checkSites() {
 	var result checker.Result
 	for _, v := range s.sites {
-		t := time.Now()
-
 		result = checker.CheckSite(v.URL)
 
-		if result.Error != nil || !result.AvailabilityStatus {
-			fmt.Printf("[%s] Site %s NOT ok\n", t.Format("2006-01-02 15:04:05"), v.URL)
-		} else {
-			fmt.Printf("[%s] Site %s ok\n", t.Format("2006-01-02 15:04:05"), v.URL)
+		if result.Error != nil {
+			s.logger.Error("site check failed", "status", "NOT ok", "url", v.URL, "error", result.Error)
+			continue
 		}
+
+		if !result.AvailabilityStatus {
+			s.logger.Warn("site unavailable", "status", "NOT ok", "code", result.Code, "url", v.URL)
+			continue
+		}
+		
+		s.logger.Info("site available", "status", "ok", "code", result.Code, "url", v.URL)
 	}
 }
