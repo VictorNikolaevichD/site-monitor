@@ -2,9 +2,9 @@ package site
 
 import (
 	neturl "net/url"
+	"strings"
 
 	"github.com/google/uuid"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/errors"
 )
 
 type Site struct {
@@ -14,25 +14,25 @@ type Site struct {
 }
 
 func NewSite(url string, name string) (Site, error) {
-	if url == "" {
-		return Site{}, errors.ErrURLRequired
+	if strings.TrimSpace(url) == "" {
+		return Site{}, ErrURLRequired
 	}
 
 	u, err := neturl.Parse(url)
 	if err != nil {
-		return Site{}, errors.ErrInvalidURL
+		return Site{}, ErrInvalidURL
 	}
 
 	if u.Scheme != "http" && u.Scheme != "https" {
-		return Site{}, errors.ErrInvalidURL
+		return Site{}, ErrInvalidURL
 	}
 
 	if u.Host == "" {
-		return Site{}, errors.ErrInvalidURL
+		return Site{}, ErrInvalidURL
 	}
 
-	if name == "" {
-		return Site{}, errors.ErrNameRequired
+	if strings.TrimSpace(name) == "" {
+		return Site{}, ErrNameRequired
 	}
 
 	return Site{
