@@ -2,11 +2,11 @@ package handler
 
 import "net/http"
 
-type RouteRegistrar interface {
+type routeRegistrar interface {
 	RegisterRoutes(mux *http.ServeMux)
 }
 
-func NewRouter(registrars ...RouteRegistrar) http.Handler {
+func NewRouter(registrars ...routeRegistrar) http.Handler {
 	mux := http.NewServeMux()
 
 	for _, registrar := range registrars {

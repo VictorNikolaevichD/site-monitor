@@ -2,7 +2,7 @@ package site
 
 import "github.com/google/uuid"
 
-type DeleteByIDRepository interface {
+type deleteByIDRepository interface {
 	DeleteByID(id uuid.UUID) error
 }
 
@@ -11,10 +11,10 @@ type DeleteCommand struct {
 }
 
 type DeleteUseCase struct {
-	repo DeleteByIDRepository
+	repo deleteByIDRepository
 }
 
-func NewDeleteUseCase(repository DeleteByIDRepository) *DeleteUseCase {
+func NewDeleteUseCase(repository deleteByIDRepository) *DeleteUseCase {
 	return &DeleteUseCase{
 		repo: repository,
 	}

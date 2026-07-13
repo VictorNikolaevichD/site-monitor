@@ -11,28 +11,28 @@ import (
 	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
 )
 
-type GetAllUseCase interface {
+type getAllUseCase interface {
 	Execute() []domain.Site
 }
 
-type AddUseCase interface {
+type addUseCase interface {
 	Execute(command siteusecase.AddCommand) (domain.Site, error)
 }
 
-type DeleteByIDUseCase interface {
+type deleteByIDUseCase interface {
 	Execute(command siteusecase.DeleteCommand) error
 }
 
 type Handler struct {
-	getAllUseCase GetAllUseCase
-	addUseCase    AddUseCase
-	deleteUseCase DeleteByIDUseCase
+	getAllUseCase getAllUseCase
+	addUseCase    addUseCase
+	deleteUseCase deleteByIDUseCase
 }
 
 func NewHandler(
-	getAllUseCase GetAllUseCase,
-	addUseCase AddUseCase,
-	deleteUseCase DeleteByIDUseCase,
+	getAllUseCase getAllUseCase,
+	addUseCase addUseCase,
+	deleteUseCase deleteByIDUseCase,
 ) *Handler {
 	return &Handler{
 		getAllUseCase: getAllUseCase,

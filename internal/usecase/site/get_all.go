@@ -4,15 +4,15 @@ import (
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
-type GetAllRepository interface {
+type getAllRepository interface {
 	GetAll() []domain.Site
 }
 
 type GetAllUseCase struct {
-	repo GetAllRepository
+	repo getAllRepository
 }
 
-func NewGetAllUseCase(repository GetAllRepository) *GetAllUseCase {
+func NewGetAllUseCase(repository getAllRepository) *GetAllUseCase {
 	return &GetAllUseCase{
 		repo: repository,
 	}
