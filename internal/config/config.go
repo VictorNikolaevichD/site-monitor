@@ -10,7 +10,7 @@ import (
 
 type Site struct {
 	URL  string `yaml:"url"`
-	name string `yaml:"name"`
+	Name string `yaml:"name"`
 }
 
 type Config struct {
