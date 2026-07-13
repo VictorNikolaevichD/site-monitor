@@ -49,3 +49,15 @@ func (r *Repository) AddIfAbsent(site domain.Site) (domain.Site, error) {
 	r.storage[site.ID] = site
 	return site, nil
 }
+
+func (r *Repository) DeleteByID(id uuid.UUID) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	if _, exists := r.storage[id]; !exists {
+		return siteusecase.ErrSiteNotFound
+	}
+
+	delete(r.storage, id)
+	return nil
+}
