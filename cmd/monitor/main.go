@@ -11,7 +11,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/google/uuid"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
@@ -31,7 +30,7 @@ func main() {
 		return
 	}
 
-	sites := toDomainSites(cfg.Sites)
+	sites := toDomainSites(cfg.Sites, logger)
 	siteRepository := siterepo.NewRepository(sites)
 	siteHandler := sitehandler.NewHandler(siteRepository)
 
@@ -84,15 +83,16 @@ func runServer(server *http.Server, cfg *config.Config, logger *slog.Logger) {
 	}
 }
 
-func toDomainSites(cfgSites []config.Site) []domain.Site {
+func toDomainSites(cfgSites []config.Site, logger *slog.Logger) []domain.Site {
 	sites := make([]domain.Site, 0, len(cfgSites))
 
 	for _, cfgS := range cfgSites {
-		sites = append(sites, domain.Site{
-			ID:   uuid.New(),
-			URL:  cfgS.URL,
-			Name: cfgS.Name,
-		})
+		site, err := domain.NewSite(cfgS.URL, cfgS.Name)
+		if err != nil {
+			logger.Error("failed to create site", "error", err, "url", cfgS.URL, "name", cfgS.Name)
+			continue
+		}
+		sites = append(sites, site)
 	}
 
 	return sites
