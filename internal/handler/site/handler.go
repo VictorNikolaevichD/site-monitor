@@ -3,6 +3,7 @@ package site
 import (
 	"encoding/json"
 	"net/http"
+	"github.com/google/uuid"
 
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
@@ -18,15 +19,21 @@ type AddUseCase interface {
 	Execute(command siteusecase.AddCommand) (domain.Site, error)
 }
 
-type Handler struct {
-	repo       Repository
-	addUseCase AddUseCase
+type DeleteUseCase interface {
+	Execute(command siteusecase.DeleteCommand) error
 }
 
-func NewHandler(repository Repository, addUseCase AddUseCase) *Handler {
+type Handler struct {
+	repo          Repository
+	addUseCase    AddUseCase
+	deleteUseCase DeleteUseCase
+}
+
+func NewHandler(repository Repository, addUseCase AddUseCase, deleteUseCase DeleteUseCase) *Handler {
 	return &Handler{
-		repo:       repository,
-		addUseCase: addUseCase,
+		repo:          repository,
+		addUseCase:    addUseCase,
+		deleteUseCase: deleteUseCase,
 	}
 }
 
@@ -45,7 +52,6 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 
 	if err := decoder.Decode(&request); err != nil {
 		handler.WriteError(w, http.StatusBadRequest, messageInvalidJSON)
-
 		return
 	}
 
@@ -55,9 +61,7 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		mappedError := mapError(err)
-
 		handler.WriteError(w, mappedError.Status, mappedError.Message)
-
 		return
 	}
 
@@ -65,4 +69,24 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 
 	_ = json.NewEncoder(w).Encode(dto.ToSiteResponse(site))
+}
+
+func (h *Handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		handler.WriteError(w, http.StatusBadRequest, messageInvalidSiteID)
+		return
+	}
+
+	err = h.deleteUseCase.Execute(siteusecase.DeleteCommand{
+		ID: id,
+	})
+	if err != nil {
+		mappedError := mapError(err)
+		handler.WriteError(w, mappedError.Status, mappedError.Message)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusNoContent)
 }

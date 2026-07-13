@@ -35,6 +35,11 @@ func mapError(err error) ErrorMapping {
 			Status:  http.StatusConflict,
 			Message: messageSiteAlreadyExists,
 		}
+	case errors.Is(err, siteusecase.ErrSiteNotFound):
+		return ErrorMapping{
+			Status:  http.StatusNotFound,
+			Message: messageSiteIDNotFound,
+		}
 	default:
 		return ErrorMapping{
 			Status:  http.StatusInternalServerError,
