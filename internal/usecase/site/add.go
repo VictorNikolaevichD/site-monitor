@@ -4,7 +4,7 @@ import (
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
-type Repository interface {
+type AddIfAbsentRepository interface {
 	AddIfAbsent(site domain.Site) (domain.Site, error)
 }
 
@@ -14,10 +14,10 @@ type AddCommand struct {
 }
 
 type AddUseCase struct {
-	repo Repository
+	repo AddIfAbsentRepository
 }
 
-func NewAddUseCase(repository Repository) *AddUseCase {
+func NewAddUseCase(repository AddIfAbsentRepository) *AddUseCase {
 	return &AddUseCase{
 		repo: repository,
 	}
