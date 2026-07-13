@@ -14,7 +14,10 @@ type Site struct {
 }
 
 func NewSite(url string, name string) (Site, error) {
-	if strings.TrimSpace(url) == "" {
+	url = strings.TrimSpace(url)
+	name = strings.TrimSpace(name)
+
+	if url == "" {
 		return Site{}, ErrURLRequired
 	}
 
@@ -31,7 +34,7 @@ func NewSite(url string, name string) (Site, error) {
 		return Site{}, ErrInvalidURL
 	}
 
-	if strings.TrimSpace(name) == "" {
+	if name == "" {
 		return Site{}, ErrNameRequired
 	}
 
