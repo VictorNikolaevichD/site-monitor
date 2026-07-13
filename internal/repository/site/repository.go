@@ -40,7 +40,6 @@ func (r *Repository) AddIfAbsent(site domain.Site) (domain.Site, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
-
 	for _, s := range r.storage {
 		if s.URL == site.URL {
 			return domain.Site{}, siteusecase.ErrSiteAlreadyExists

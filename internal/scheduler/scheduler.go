@@ -76,7 +76,7 @@ func (s *Scheduler) checkSites() {
 			s.logger.Warn("site unavailable", "status", "NOT ok", "code", result.Code, "url", v.URL)
 			continue
 		}
-		
+
 		s.logger.Info("site available", "status", "ok", "code", result.Code, "url", v.URL)
 	}
 }

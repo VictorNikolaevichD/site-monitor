@@ -19,13 +19,13 @@ type AddUseCase interface {
 }
 
 type Handler struct {
-	repo Repository
+	repo       Repository
 	addUseCase AddUseCase
 }
 
 func NewHandler(repository Repository, addUseCase AddUseCase) *Handler {
 	return &Handler{
-		repo: repository,
+		repo:       repository,
 		addUseCase: addUseCase,
 	}
 }
@@ -50,7 +50,7 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 	}
 
 	site, err := h.addUseCase.Execute(siteusecase.AddCommand{
-		URL: request.URL,
+		URL:  request.URL,
 		Name: request.Name,
 	})
 	if err != nil {

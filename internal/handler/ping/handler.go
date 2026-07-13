@@ -7,7 +7,7 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping/dto"
 )
 
-type Handler struct {}
+type Handler struct{}
 
 func NewHandler() *Handler {
 	return &Handler{}
