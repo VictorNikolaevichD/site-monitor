@@ -34,7 +34,8 @@ func main() {
 	sites := toDomainSites(cfg.Sites, logger)
 	siteRepository := siterepo.NewRepository(sites)
 	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository)
-	siteHandler := sitehandler.NewHandler(siteRepository, siteAddUseCase)
+	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository)
+	siteHandler := sitehandler.NewHandler(siteRepository, siteAddUseCase, siteDeleteUseCase)
 
 	pingHandler := pinghandler.NewHandler()
 
