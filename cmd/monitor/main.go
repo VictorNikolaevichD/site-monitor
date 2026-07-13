@@ -19,6 +19,7 @@ import (
 	siterepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/scheduler"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/server"
+	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
 )
 
 func main() {
@@ -32,7 +33,8 @@ func main() {
 
 	sites := toDomainSites(cfg.Sites, logger)
 	siteRepository := siterepo.NewRepository(sites)
-	siteHandler := sitehandler.NewHandler(siteRepository)
+	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository)
+	siteHandler := sitehandler.NewHandler(siteRepository, siteAddUseCase)
 
 	pingHandler := pinghandler.NewHandler()
 
