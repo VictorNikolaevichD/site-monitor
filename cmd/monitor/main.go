@@ -14,9 +14,9 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
-	pingHandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping"
-	siteHandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/site"
-	siteRepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
+	pinghandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping"
+	sitehandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/site"
+	siterepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/scheduler"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/server"
 )
@@ -30,24 +30,19 @@ func main() {
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
 	sites := toDomainSites(cfg.Sites)
-	siteRepository := siteRepo.NewRepository(sites)
-	siteHandler := siteHandler.NewHandler(siteRepository)
+	siteRepository := siterepo.NewRepository(sites)
+	siteHandler := sitehandler.NewHandler(siteRepository)
 
-	pingHandler := pingHandler.NewHandler()
+	pingHandler := pinghandler.NewHandler()
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(signals)
 
-	mux := http.NewServeMux()
-	handler.NewRouter(mux, siteHandler)
-	handler.NewRouter(mux, pingHandler)
+	router := handler.NewRouter(siteHandler, pingHandler)
 
-	httpServer := server.NewServer(cfg, logger, mux)
+	httpServer := server.NewServer(cfg, logger, router)
 	go runServer(httpServer, cfg, logger)
 
 	sh := scheduler.New(cfg.Sites, cfg.Interval, logger)
@@ -57,6 +52,9 @@ func main() {
 	logger.Info("shutdown signal received", "signal", sig.String())
 
 	sh.Stop()
+	
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
 	if err := httpServer.Shutdown(ctx); err != nil {
 		logger.Error("http server shutdown failed", "error", err)
