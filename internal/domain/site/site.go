@@ -1,7 +1,11 @@
 package site
 
+import (
+	"github.com/google/uuid"
+)
+
 type Site struct {
-	ID   int32
+	ID   uuid.UUID
 	URL  string
 	Name string
 }

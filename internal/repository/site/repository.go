@@ -3,16 +3,17 @@ package site
 import (
 	"sync"
 
+	"github.com/google/uuid"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
 type Repository struct {
 	mu      sync.RWMutex
-	storage map[int32]domain.Site
+	storage map[uuid.UUID]domain.Site
 }
 
 func NewRepository(sites []domain.Site) *Repository {
-	storage := make(map[int32]domain.Site, len(sites))
+	storage := make(map[uuid.UUID]domain.Site, len(sites))
 
 	for _, site := range sites {
 		storage[site.ID] = site

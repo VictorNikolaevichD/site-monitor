@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
@@ -52,7 +53,7 @@ func main() {
 	logger.Info("shutdown signal received", "signal", sig.String())
 
 	sh.Stop()
-	
+
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
@@ -86,9 +87,9 @@ func runServer(server *http.Server, cfg *config.Config, logger *slog.Logger) {
 func toDomainSites(cfgSites []config.Site) []domain.Site {
 	sites := make([]domain.Site, 0, len(cfgSites))
 
-	for i, cfgS := range cfgSites {
+	for _, cfgS := range cfgSites {
 		sites = append(sites, domain.Site{
-			ID:   int32(i + 1),
+			ID:   uuid.New(),
 			URL:  cfgS.URL,
 			Name: cfgS.Name,
 		})
