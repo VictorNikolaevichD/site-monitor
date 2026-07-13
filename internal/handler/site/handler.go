@@ -2,8 +2,8 @@ package site
 
 import (
 	"encoding/json"
-	"net/http"
 	"github.com/google/uuid"
+	"net/http"
 
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
@@ -11,34 +11,38 @@ import (
 	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
 )
 
-type Repository interface {
-	GetAll() []domain.Site
+type GetAllUseCase interface {
+	Execute() []domain.Site
 }
 
 type AddUseCase interface {
 	Execute(command siteusecase.AddCommand) (domain.Site, error)
 }
 
-type DeleteUseCase interface {
+type DeleteByIDUseCase interface {
 	Execute(command siteusecase.DeleteCommand) error
 }
 
 type Handler struct {
-	repo          Repository
+	getAllUseCase GetAllUseCase
 	addUseCase    AddUseCase
-	deleteUseCase DeleteUseCase
+	deleteUseCase DeleteByIDUseCase
 }
 
-func NewHandler(repository Repository, addUseCase AddUseCase, deleteUseCase DeleteUseCase) *Handler {
+func NewHandler(
+	getAllUseCase GetAllUseCase,
+	addUseCase AddUseCase,
+	deleteUseCase DeleteByIDUseCase,
+) *Handler {
 	return &Handler{
-		repo:          repository,
+		getAllUseCase: getAllUseCase,
 		addUseCase:    addUseCase,
 		deleteUseCase: deleteUseCase,
 	}
 }
 
 func (h *Handler) GetAll(w http.ResponseWriter, _ *http.Request) {
-	sites := h.repo.GetAll()
+	sites := h.getAllUseCase.Execute()
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(dto.ToSiteResponses(sites))
