@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/errors"
 )
 
 type Repository struct {
@@ -33,4 +34,19 @@ func (r *Repository) GetAll() []domain.Site {
 		records = append(records, rec)
 	}
 	return records
+}
+
+func (r *Repository) AddIfAbsent(site domain.Site) (domain.Site, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+
+	for _, s := range r.storage {
+		if s.URL == site.URL {
+			return domain.Site{}, errors.ErrSiteAlreadyExists
+		}
+	}
+
+	r.storage[site.ID] = site
+	return site, nil
 }
