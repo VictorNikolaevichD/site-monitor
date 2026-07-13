@@ -23,6 +23,7 @@ func CheckSite(url string) Result {
 			Error: err,
 		}
 	}
+	defer resp.Body.Close()
 
 	return Result{
 		URL:                url,
