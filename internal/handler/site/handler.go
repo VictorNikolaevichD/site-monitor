@@ -2,8 +2,9 @@ package site
 
 import (
 	"encoding/json"
-	"github.com/google/uuid"
 	"net/http"
+
+	"github.com/google/uuid"
 
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
@@ -23,21 +24,28 @@ type deleteByIDUseCase interface {
 	Execute(command siteusecase.DeleteCommand) error
 }
 
+type getStatusByIDUseCase interface {
+	Execute(command siteusecase.GetStatusCommand) (domain.Site, error)
+}
+
 type Handler struct {
-	getAllUseCase getAllUseCase
-	addUseCase    addUseCase
-	deleteUseCase deleteByIDUseCase
+	getAllUseCase    getAllUseCase
+	addUseCase       addUseCase
+	deleteUseCase    deleteByIDUseCase
+	getStatusUseCase getStatusByIDUseCase
 }
 
 func NewHandler(
 	getAllUseCase getAllUseCase,
 	addUseCase addUseCase,
 	deleteUseCase deleteByIDUseCase,
+	getStatusUseCase getStatusByIDUseCase,
 ) *Handler {
 	return &Handler{
-		getAllUseCase: getAllUseCase,
-		addUseCase:    addUseCase,
-		deleteUseCase: deleteUseCase,
+		getAllUseCase:    getAllUseCase,
+		addUseCase:       addUseCase,
+		deleteUseCase:    deleteUseCase,
+		getStatusUseCase: getStatusUseCase,
 	}
 }
 
@@ -93,4 +101,25 @@ func (h *Handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) GetStatusByID(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		handler.WriteError(w, http.StatusBadRequest, messageInvalidSiteID)
+		return
+	}
+
+	site, err := h.getStatusUseCase.Execute(siteusecase.GetStatusCommand{
+		ID: id,
+	})
+	if err != nil {
+		mappedError := mapError(err)
+		handler.WriteError(w, mappedError.Status, mappedError.Message)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(dto.ToStatusResponse(site))
 }

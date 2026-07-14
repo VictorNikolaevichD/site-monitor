@@ -38,7 +38,8 @@ func main() {
 	siteGetAllUseCase := siteusecase.NewGetAllUseCase(siteRepository)
 	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository)
 	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository)
-	siteHandler := sitehandler.NewHandler(siteGetAllUseCase, siteAddUseCase, siteDeleteUseCase)
+	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository)
+	siteHandler := sitehandler.NewHandler(siteGetAllUseCase, siteAddUseCase, siteDeleteUseCase, siteGetStatusUseCase)
 	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(siteRepository, checker.NewChecker(), logger)
 
 	pingHandler := pinghandler.NewHandler()

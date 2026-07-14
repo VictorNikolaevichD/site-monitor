@@ -45,6 +45,7 @@ func (u *CheckSiteUseCase) Execute() {
 				Availability: domain.Unavailable,
 				Code:         result.Code,
 				CheckedAt:    time.Now(),
+				Duration:     result.Duration,
 				Error:        result.Error.Error(),
 			})
 			continue
@@ -56,6 +57,7 @@ func (u *CheckSiteUseCase) Execute() {
 				Availability: domain.Unavailable,
 				Code:         result.Code,
 				CheckedAt:    time.Now(),
+				Duration:     result.Duration,
 			})
 			continue
 		}
@@ -65,6 +67,7 @@ func (u *CheckSiteUseCase) Execute() {
 			Availability: domain.Available,
 			Code:         result.Code,
 			CheckedAt:    time.Now(),
+			Duration:     result.Duration,
 		})
 	}
 }

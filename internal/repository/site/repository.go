@@ -76,3 +76,15 @@ func (r *Repository) UpdateLastCheckByID(id uuid.UUID, checkStatus domain.CheckS
 
 	return site, nil
 }
+
+func (r *Repository) GetByID(id uuid.UUID) (domain.Site, error) {
+	r.mu.RLock()
+	defer r.mu.RUnlock()
+
+	site, exists := r.storage[id]
+	if !exists {
+		return domain.Site{}, domain.ErrSiteNotFound
+	}
+
+	return site, nil
+}

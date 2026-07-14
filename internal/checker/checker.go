@@ -9,6 +9,7 @@ type Result struct {
 	URL                string
 	Code               int
 	AvailabilityStatus bool
+	Duration           time.Duration
 	Error              error
 }
 
@@ -25,14 +26,19 @@ func NewChecker() *Checker {
 }
 
 func (c *Checker) Check(url string) Result {
+	startedAt := time.Now()
+
 	resp, err := c.client.Get(url)
+	duration := time.Since(startedAt)
+
 	if err != nil {
-		return Result{URL: url, Error: err}
+		return Result{URL: url, Duration: duration, Error: err}
 	}
 	defer resp.Body.Close()
 
 	return Result{
 		URL:                url,
+		Duration:           duration,
 		Code:               resp.StatusCode,
 		AvailabilityStatus: resp.StatusCode == http.StatusOK,
 		Error:              nil,

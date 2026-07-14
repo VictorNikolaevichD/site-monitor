@@ -19,3 +19,36 @@ func ToSiteResponses(sites []domain.Site) []SiteResponse {
 	}
 	return responses
 }
+
+func ToStatusResponse(site domain.Site) StatusResponse {
+	response := StatusResponse{
+		URL:          site.URL,
+		Availability: domain.Unknown,
+	}
+
+	if site.LastCheck == nil {
+		return response
+	}
+
+	lastCheck := site.LastCheck
+
+	response.Availability = lastCheck.Availability
+
+	checkedAt := lastCheck.CheckedAt
+	response.CheckedAt = &checkedAt
+
+	durationMs := lastCheck.Duration.Milliseconds()
+	response.Duration = &durationMs
+
+	if lastCheck.Code != 0 {
+		code := lastCheck.Code
+		response.Code = &code
+	}
+
+	if lastCheck.Error != "" {
+		errorMessage := lastCheck.Error
+		response.Error = &errorMessage
+	}
+
+	return response
+}
