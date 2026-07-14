@@ -3,24 +3,26 @@ package scheduler
 import (
 	"log/slog"
 	"time"
-
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 )
 
-type Scheduler struct {
-	sites    []config.Site
-	interval time.Duration
-	stop     chan struct{}
-	done     chan struct{}
-	logger   *slog.Logger
+type checkSitesUseCase interface {
+	Execute()
 }
 
-func New(sites []config.Site, interval time.Duration, logger *slog.Logger) *Scheduler {
+type Scheduler struct {
+	checkSitesUseCase checkSitesUseCase
+	interval          time.Duration
+	logger            *slog.Logger
+
+	stop chan struct{}
+	done chan struct{}
+}
+
+func New(checkSitesUseCase checkSitesUseCase, interval time.Duration, logger *slog.Logger) *Scheduler {
 	return &Scheduler{
-		sites:    sites,
-		interval: interval,
-		logger:   logger,
+		checkSitesUseCase: checkSitesUseCase,
+		interval:          interval,
+		logger:            logger,
 	}
 }
 
@@ -51,32 +53,13 @@ func (s *Scheduler) schedule() {
 	defer ticker.Stop()
 	defer close(s.done)
 
-	s.checkSites()
+	s.checkSitesUseCase.Execute()
 	for {
 		select {
 		case <-ticker.C:
-			s.checkSites()
+			s.checkSitesUseCase.Execute()
 		case <-s.stop:
 			return
 		}
-	}
-}
-
-func (s *Scheduler) checkSites() {
-	var result checker.Result
-	for _, v := range s.sites {
-		result = checker.CheckSite(v.URL)
-
-		if result.Error != nil {
-			s.logger.Error("site check failed", "status", "NOT ok", "url", v.URL, "error", result.Error)
-			continue
-		}
-
-		if !result.AvailabilityStatus {
-			s.logger.Warn("site unavailable", "status", "NOT ok", "code", result.Code, "url", v.URL)
-			continue
-		}
-
-		s.logger.Info("site available", "status", "ok", "code", result.Code, "url", v.URL)
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
@@ -19,6 +20,7 @@ import (
 	siterepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/scheduler"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/server"
+	monitorusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/monitor"
 	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
 )
 
@@ -37,6 +39,7 @@ func main() {
 	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository)
 	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository)
 	siteHandler := sitehandler.NewHandler(siteGetAllUseCase, siteAddUseCase, siteDeleteUseCase)
+	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(siteRepository, checker.NewChecker(), logger)
 
 	pingHandler := pinghandler.NewHandler()
 
@@ -49,7 +52,7 @@ func main() {
 	httpServer := server.NewServer(cfg, logger, router)
 	go runServer(httpServer, cfg, logger)
 
-	sh := scheduler.New(cfg.Sites, cfg.Interval, logger)
+	sh := scheduler.New(checkSiteUseCase, cfg.Interval, logger)
 	sh.Start()
 
 	sig := <-signals
