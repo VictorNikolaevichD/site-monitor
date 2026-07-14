@@ -55,9 +55,24 @@ func (r *Repository) DeleteByID(id uuid.UUID) error {
 	defer r.mu.Unlock()
 
 	if _, exists := r.storage[id]; !exists {
-		return siteusecase.ErrSiteNotFound
+		return domain.ErrSiteNotFound
 	}
 
 	delete(r.storage, id)
 	return nil
+}
+
+func (r *Repository) UpdateLastCheckByID(id uuid.UUID, checkStatus domain.CheckStatus) (domain.Site, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	site, exists := r.storage[id]
+	if !exists {
+		return domain.Site{}, domain.ErrSiteNotFound
+	}
+
+	site.LastCheck = &checkStatus
+	r.storage[id] = site
+
+	return site, nil
 }

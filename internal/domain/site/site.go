@@ -8,9 +8,10 @@ import (
 )
 
 type Site struct {
-	ID   uuid.UUID
-	URL  string
-	Name string
+	ID        uuid.UUID
+	URL       string
+	Name      string
+	LastCheck *CheckStatus
 }
 
 func NewSite(url string, name string) (Site, error) {
