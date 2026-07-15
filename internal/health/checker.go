@@ -7,7 +7,7 @@ import (
 
 type Status string
 
-const (	
+const (
 	StatusHealthy   Status = "healthy"
 	StatusUnhealthy Status = "unhealthy"
 )
@@ -40,9 +40,9 @@ func NewHealthChecker(version string, startedAt time.Time, dependencies ...depen
 
 func (h *HealthChecker) Check(ctx context.Context) Report {
 	report := Report{
-		Uptime: time.Since(h.startedAt),
+		Uptime:      time.Since(h.startedAt),
 		CurrentTime: time.Now(),
-		Version: h.version,
+		Version:     h.version,
 	}
 	for _, d := range h.dependencies {
 		err := d.Check(ctx)
