@@ -1,0 +1,365 @@
+{
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "schemes": [
+        "http"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "REST API для управления сайтами и просмотра результатов мониторинга.",
+        "title": "Site Monitor API",
+        "contact": {},
+        "version": "v1.0"
+    },
+    "basePath": "/api/v1",
+    "paths": {
+        "/health": {
+            "get": {
+                "description": "Возвращает статус, uptime, текущее время и версию приложения",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Проверить готовность к работе",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HealthResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HealthResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/ping": {
+            "get": {
+                "description": "Возвращает pong, если HTTP-сервер работает",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Проверить доступность сервиса",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.PingResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sites": {
+            "get": {
+                "description": "Возвращает все сайты, добавленные в мониторинг",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sites"
+                ],
+                "summary": "Получить список сайтов",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.SiteResponse"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Создаёт новый сайт для мониторинга",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sites"
+                ],
+                "summary": "Добавить сайт",
+                "parameters": [
+                    {
+                        "description": "Данные сайта",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.AddSiteRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.SiteResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный JSON, URL или имя сайта",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Сайт с таким URL уже существует",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sites/{id}": {
+            "delete": {
+                "description": "Удаляет сайт из мониторинга по UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sites"
+                ],
+                "summary": "Удалить сайт",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID сайта",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "Сайт удалён"
+                    },
+                    "400": {
+                        "description": "Некорректный UUID сайта",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Сайт не найден",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sites/{id}/status": {
+            "get": {
+                "description": "Возвращает результат последней проверки сайта по UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sites"
+                ],
+                "summary": "Получить статус сайта",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID сайта",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.StatusResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный UUID сайта",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Сайт не найден",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "dto.AddSiteRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "example": "Example"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://example.com"
+                }
+            }
+        },
+        "dto.HealthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/health.Status"
+                        }
+                    ],
+                    "example": "healthy"
+                },
+                "time": {
+                    "type": "string",
+                    "example": "2026-07-15T13:03:26.9795475+03:00"
+                },
+                "uptime": {
+                    "type": "integer",
+                    "example": 729028
+                },
+                "version": {
+                    "type": "string",
+                    "example": "v1.0.0"
+                }
+            }
+        },
+        "dto.PingResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "pong"
+                }
+            }
+        },
+        "dto.SiteResponse": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Example"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://example.com"
+                }
+            }
+        },
+        "dto.StatusResponse": {
+            "type": "object",
+            "properties": {
+                "availability": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/site.Availability"
+                        }
+                    ],
+                    "example": "available"
+                },
+                "checked_at": {
+                    "type": "string",
+                    "example": "2026-07-15T10:00:00Z"
+                },
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "duration": {
+                    "type": "integer",
+                    "example": 245
+                },
+                "error": {
+                    "type": "string",
+                    "example": "context deadline exceeded"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://example.com"
+                }
+            }
+        },
+        "handler.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string",
+                    "example": "некорректный запрос"
+                }
+            }
+        },
+        "health.Status": {
+            "type": "string",
+            "enum": [
+                "healthy",
+                "unhealthy"
+            ],
+            "x-enum-varnames": [
+                "StatusHealthy",
+                "StatusUnhealthy"
+            ]
+        },
+        "site.Availability": {
+            "type": "string",
+            "enum": [
+                "available",
+                "unavailable",
+                "unknown"
+            ],
+            "x-enum-varnames": [
+                "Available",
+                "Unavailable",
+                "Unknown"
+            ]
+        }
+    }
+}

@@ -27,3 +27,11 @@ go run -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Versi
 ```
 go build -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=v1.1.0-beta" -o site-monitor.exe ./cmd/monitor
 ```
+
+### Генерация Swagger-документации
+
+Из корня проекта:
+
+```
+swag init -g cmd/monitor/main.go --parseInternal
+```

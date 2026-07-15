@@ -1,6 +1,6 @@
 package dto
 
 type AddSiteRequest struct {
-	URL  string `json:"url"`
-	Name string `json:"name"`
+	URL  string `json:"url" example:"https://example.com"`
+	Name string `json:"name" example:"Example"`
 }

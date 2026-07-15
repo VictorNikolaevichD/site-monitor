@@ -19,6 +19,7 @@ import (
 	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/health"
 	pinghandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping"
 	sitehandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/site"
+	swaggerhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/swagger"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/health"
 	siterepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/scheduler"
@@ -27,6 +28,13 @@ import (
 	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
 )
 
+// @title Site Monitor API
+// @version v1.0
+// @description REST API для управления сайтами и просмотра результатов мониторинга.
+// @accept json
+// @produce json
+// @BasePath /api/v1
+// @schemes http
 func main() {
 	startedAt := time.Now()
 
@@ -37,6 +45,8 @@ func main() {
 	if err != nil {
 		return
 	}
+
+	swaggerHandler := swaggerhandler.NewHandler()
 
 	sites := toDomainSites(cfg.Sites, logger)
 	siteRepository := siterepo.NewRepository(sites)
@@ -55,7 +65,7 @@ func main() {
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(signals)
 
-	router := handler.NewRouter(siteHandler, pingHandler, healthHandler)
+	router := handler.NewRouter(siteHandler, pingHandler, healthHandler, swaggerHandler)
 
 	httpServer := server.NewServer(cfg, logger, router)
 	go runServer(httpServer, cfg, logger)
