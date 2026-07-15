@@ -21,6 +21,7 @@ import (
 	sitehandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/site"
 	swaggerhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/swagger"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/health"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/middleware"
 	siterepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/scheduler"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/server"
@@ -67,7 +68,9 @@ func main() {
 
 	router := handler.NewRouter(siteHandler, pingHandler, healthHandler, swaggerHandler)
 
-	httpServer := server.NewServer(cfg, logger, router)
+	httpHandler := middleware.RequestID(router)
+
+	httpServer := server.NewServer(cfg, logger, httpHandler)
 	go runServer(httpServer, cfg, logger)
 
 	sh := scheduler.New(checkSiteUseCase, cfg.Interval, logger)
