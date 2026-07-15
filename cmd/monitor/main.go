@@ -68,7 +68,7 @@ func main() {
 
 	router := handler.NewRouter(siteHandler, pingHandler, healthHandler, swaggerHandler)
 
-	httpHandler := middleware.RequestID(middleware.Logging(router, logger))
+	httpHandler := middleware.RequestID(middleware.Logging(middleware.Recovery(router, logger), logger))
 
 	httpServer := server.NewServer(cfg, logger, httpHandler)
 	go runServer(httpServer, cfg, logger)
