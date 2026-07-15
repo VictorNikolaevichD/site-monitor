@@ -18,7 +18,9 @@ func NewHandler() *Handler {
 // @Description Возвращает pong, если HTTP-сервер работает
 // @Tags system
 // @Produce json
+// @Param X-Request-ID header string false "Идентификатор запроса для трассировки"
 // @Success 200 {object} dto.PingResponse
+// @Header 200 {string} X-Request-ID "Идентификатор запроса"
 // @Router /ping [get]
 func (h *Handler) Ping(w http.ResponseWriter, _ *http.Request) {
 	w.Header().Set("Content-Type", "application/json")

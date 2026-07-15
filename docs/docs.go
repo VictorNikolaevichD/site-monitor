@@ -31,17 +31,37 @@ const docTemplate = `{
                     "system"
                 ],
                 "summary": "Проверить готовность к работе",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор запроса для трассировки",
+                        "name": "X-Request-ID",
+                        "in": "header"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.HealthResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
                             "$ref": "#/definitions/dto.HealthResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     }
                 }
@@ -57,11 +77,25 @@ const docTemplate = `{
                     "system"
                 ],
                 "summary": "Проверить доступность сервиса",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор запроса для трассировки",
+                        "name": "X-Request-ID",
+                        "in": "header"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.PingResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     }
                 }
@@ -77,6 +111,14 @@ const docTemplate = `{
                     "sites"
                 ],
                 "summary": "Получить список сайтов",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор запроса для трассировки",
+                        "name": "X-Request-ID",
+                        "in": "header"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -84,6 +126,12 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/dto.SiteResponse"
+                            }
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
                             }
                         }
                     }
@@ -103,6 +151,12 @@ const docTemplate = `{
                 "summary": "Добавить сайт",
                 "parameters": [
                     {
+                        "type": "string",
+                        "description": "Идентификатор запроса для трассировки",
+                        "name": "X-Request-ID",
+                        "in": "header"
+                    },
+                    {
                         "description": "Данные сайта",
                         "name": "request",
                         "in": "body",
@@ -117,24 +171,48 @@ const docTemplate = `{
                         "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/dto.SiteResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     },
                     "400": {
                         "description": "Некорректный JSON, URL или имя сайта",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     },
                     "409": {
                         "description": "Сайт с таким URL уже существует",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     }
                 }
@@ -153,6 +231,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Идентификатор запроса для трассировки",
+                        "name": "X-Request-ID",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
                         "format": "uuid",
                         "description": "UUID сайта",
                         "name": "id",
@@ -162,24 +246,48 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "204": {
-                        "description": "Сайт удалён"
+                        "description": "Сайт удалён",
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
+                        }
                     },
                     "400": {
                         "description": "Некорректный UUID сайта",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     },
                     "404": {
                         "description": "Сайт не найден",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     }
                 }
@@ -198,6 +306,12 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
+                        "description": "Идентификатор запроса для трассировки",
+                        "name": "X-Request-ID",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
                         "format": "uuid",
                         "description": "UUID сайта",
                         "name": "id",
@@ -210,24 +324,48 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/dto.StatusResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     },
                     "400": {
                         "description": "Некорректный UUID сайта",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     },
                     "404": {
                         "description": "Сайт не найден",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     },
                     "500": {
                         "description": "Внутренняя ошибка сервера",
                         "schema": {
                             "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
                         }
                     }
                 }
@@ -375,7 +513,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "/api/v1",
 	Schemes:          []string{"http"},
 	Title:            "Site Monitor API",
-	Description:      "REST API для управления сайтами и просмотра результатов мониторинга.",
+	Description:      "REST API для управления сайтами и просмотра результатов мониторинга.\nОпционально передавайте X-Request-ID в запросе; сервис вернёт его (или сгенерированный ID) в заголовке ответа X-Request-ID.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

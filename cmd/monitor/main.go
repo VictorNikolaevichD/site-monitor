@@ -32,6 +32,7 @@ import (
 // @title Site Monitor API
 // @version v1.0
 // @description REST API для управления сайтами и просмотра результатов мониторинга.
+// @description Опционально передавайте X-Request-ID в запросе; сервис вернёт его (или сгенерированный ID) в заголовке ответа X-Request-ID.
 // @accept json
 // @produce json
 // @BasePath /api/v1

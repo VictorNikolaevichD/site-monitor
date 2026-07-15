@@ -29,8 +29,11 @@ func NewHandler(healthChecker healthChecker) *Handler {
 // @Description Возвращает статус, uptime, текущее время и версию приложения
 // @Tags system
 // @Produce json
+// @Param X-Request-ID header string false "Идентификатор запроса для трассировки"
 // @Success 200 {object} dto.HealthResponse
 // @Failure 503 {object} dto.HealthResponse
+// @Header 200 {string} X-Request-ID "Идентификатор запроса"
+// @Header 503 {string} X-Request-ID "Идентификатор запроса"
 // @Router /health [get]
 func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
