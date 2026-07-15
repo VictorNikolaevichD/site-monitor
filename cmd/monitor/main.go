@@ -15,8 +15,10 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
+	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/health"
 	pinghandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping"
 	sitehandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/site"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/health"
 	siterepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/scheduler"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/server"
@@ -25,6 +27,8 @@ import (
 )
 
 func main() {
+	startedAt := time.Now()
+
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	logger.Info("site monitor started.")
 
@@ -43,12 +47,14 @@ func main() {
 	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(siteRepository, checker.NewChecker(), logger)
 
 	pingHandler := pinghandler.NewHandler()
+	healthChecker := health.NewHealthChecker("v1.1.0-beta", startedAt)
+	healthHandler := healthhandler.NewHandler(healthChecker)
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(signals)
 
-	router := handler.NewRouter(siteHandler, pingHandler)
+	router := handler.NewRouter(siteHandler, pingHandler, healthHandler)
 
 	httpServer := server.NewServer(cfg, logger, router)
 	go runServer(httpServer, cfg, logger)
