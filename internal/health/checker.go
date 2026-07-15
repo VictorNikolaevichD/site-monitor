@@ -52,6 +52,6 @@ func (h *HealthChecker) Check(ctx context.Context) Report {
 		}
 	}
 
-	report.Status = StatusUnhealthy
+	report.Status = StatusHealthy
 	return report
 }
