@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
@@ -47,7 +48,7 @@ func main() {
 	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(siteRepository, checker.NewChecker(), logger)
 
 	pingHandler := pinghandler.NewHandler()
-	healthChecker := health.NewHealthChecker("v1.1.0-beta", startedAt)
+	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt)
 	healthHandler := healthhandler.NewHandler(healthChecker)
 
 	signals := make(chan os.Signal, 1)
