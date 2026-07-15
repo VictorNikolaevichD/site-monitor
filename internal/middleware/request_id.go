@@ -1,11 +1,11 @@
 package middleware
 
 import (
-    "context"
-    "net/http"
-    "strings"
+	"context"
+	"net/http"
+	"strings"
 
-    "github.com/google/uuid"
+	"github.com/google/uuid"
 )
 
 const requestIDHeader = "X-Request-ID"
@@ -28,6 +28,6 @@ func RequestID(next http.Handler) http.Handler {
 }
 
 func RequestIDFromContext(ctx context.Context) string {
-    requestID, _ := ctx.Value(requestIDContextKey{}).(string)
-    return requestID
+	requestID, _ := ctx.Value(requestIDContextKey{}).(string)
+	return requestID
 }
