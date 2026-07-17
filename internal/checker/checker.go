@@ -1,6 +1,7 @@
 package checker
 
 import (
+	"io"
 	"net/http"
 	"time"
 )
@@ -34,13 +35,16 @@ func (c *Checker) Check(url string) Result {
 	if err != nil {
 		return Result{URL: url, Duration: duration, Error: err}
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_, _ = io.Copy(io.Discard, resp.Body)
+		resp.Body.Close()
+	}()
 
 	return Result{
 		URL:                url,
 		Duration:           duration,
 		Code:               resp.StatusCode,
-		AvailabilityStatus: resp.StatusCode == http.StatusOK,
+		AvailabilityStatus: resp.StatusCode < http.StatusBadRequest,
 		Error:              nil,
 	}
 }
