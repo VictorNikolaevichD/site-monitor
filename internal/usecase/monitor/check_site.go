@@ -41,33 +41,39 @@ func (u *CheckSiteUseCase) Execute() {
 
 		if result.Error != nil {
 			u.logger.Error("site check failed", "status", "NOT ok", "url", v.URL, "error", result.Error)
-			u.repo.UpdateLastCheckByID(v.ID, domain.CheckStatus{
+			if _, err := u.repo.UpdateLastCheckByID(v.ID, domain.CheckStatus{
 				Availability: domain.Unavailable,
 				Code:         result.Code,
 				CheckedAt:    time.Now(),
 				Duration:     result.Duration,
 				Error:        result.Error.Error(),
-			})
+			}); err != nil {
+				u.logger.Error("failed to update last check", "site_id", v.ID, "error", err)
+			}
 			continue
 		}
 
 		if !result.AvailabilityStatus {
 			u.logger.Warn("site unavailable", "status", "NOT ok", "code", result.Code, "url", v.URL)
-			u.repo.UpdateLastCheckByID(v.ID, domain.CheckStatus{
+			if _, err := u.repo.UpdateLastCheckByID(v.ID, domain.CheckStatus{
 				Availability: domain.Unavailable,
 				Code:         result.Code,
 				CheckedAt:    time.Now(),
 				Duration:     result.Duration,
-			})
+			}); err != nil {
+				u.logger.Error("failed to update last check", "site_id", v.ID, "error", err)
+			}
 			continue
 		}
 
 		u.logger.Info("site available", "status", "ok", "code", result.Code, "url", v.URL)
-		u.repo.UpdateLastCheckByID(v.ID, domain.CheckStatus{
+		if _, err := u.repo.UpdateLastCheckByID(v.ID, domain.CheckStatus{
 			Availability: domain.Available,
 			Code:         result.Code,
 			CheckedAt:    time.Now(),
 			Duration:     result.Duration,
-		})
+		}); err != nil {
+			u.logger.Error("failed to update last check", "site_id", v.ID, "error", err)
+		}
 	}
 }
