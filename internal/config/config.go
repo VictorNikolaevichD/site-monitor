@@ -1,8 +1,10 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -31,5 +33,21 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse config file: %w", err)
 	}
 
+	if err := cfg.Validate(); err != nil {
+		return nil, fmt.Errorf("validate config: %w", err)
+	}
+
 	return &cfg, nil
+}
+
+func (c *Config) Validate() error {
+	if c.Interval <= 0 {
+		return errors.New("interval must be greater than zero")
+	}
+
+	if strings.TrimSpace(c.HTTPAddr) == "" {
+		return errors.New("http_addr is required")
+	}
+
+	return nil
 }
