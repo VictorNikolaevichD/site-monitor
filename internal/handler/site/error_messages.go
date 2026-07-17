@@ -7,6 +7,6 @@ const (
 	messageNameRequired      = "имя сайта обязательно"
 	messageSiteAlreadyExists = "сайт с таким URL уже существует"
 	messageInternalError     = "внутренняя ошибка сервера"
-	messageInvalidSiteID     = "неккоректный ID сайта"
+	messageInvalidSiteID     = "некорректный ID сайта"
 	messageSiteIDNotFound    = "сайт с указанным ID не найден"
 )
