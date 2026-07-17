@@ -5,9 +5,9 @@ import (
 )
 
 var (
-	ErrInvalidURL   = errors.New("некорректные URL сайта")
-	ErrURLRequired  = errors.New("URL сайта обязателен")
-	ErrNameRequired = errors.New("имя сайта обязательно")
+	ErrInvalidURL   = errors.New("invalid site URL")
+	ErrURLRequired  = errors.New("site URL is required")
+	ErrNameRequired = errors.New("site name is required")
 
-	ErrSiteNotFound = errors.New("Сайт с таким ID не найден")
+	ErrSiteNotFound = errors.New("site not found")
 )
