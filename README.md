@@ -40,6 +40,28 @@ docker compose up --build
 docker compose down
 ```
 
+### Volumes
+
+Список volumes:
+
+```
+docker volume ls
+```
+
+Остановка контейнеров и удаление volumes проекта:
+
+```
+docker compose down -v
+```
+
+Удалить конкретный volume вручную:
+
+```
+docker volume rm site-monitor_site-monitor-postgres-data
+```
+
+Имя volume может отличаться — смотреть `docker volume ls`.
+
 ### Генерация Swagger-документации
 
 Из корня проекта:
