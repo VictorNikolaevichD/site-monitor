@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/caarlos0/env/v11"
+	"github.com/joho/godotenv"
 	"gopkg.in/yaml.v3"
 )
 
@@ -15,13 +17,20 @@ type Site struct {
 	Name string `yaml:"name"`
 }
 
+type Database struct {
+	URL string `env:"DATABASE_URL,required,notEmpty"`
+}
+
 type Config struct {
 	Sites    []Site        `yaml:"sites"`
 	Interval time.Duration `yaml:"interval"`
 	HTTPAddr string        `yaml:"http_addr"`
+	Database Database
 }
 
 func Load(path string) (*Config, error) {
+	_ = godotenv.Load()
+
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("read config file: %w", err)
@@ -31,6 +40,10 @@ func Load(path string) (*Config, error) {
 
 	if err := yaml.Unmarshal(data, &cfg); err != nil {
 		return nil, fmt.Errorf("parse config file: %w", err)
+	}
+
+	if err := env.Parse(&cfg); err != nil {
+		return nil, fmt.Errorf("parse env config: %w", err)
 	}
 
 	if err := cfg.Validate(); err != nil {

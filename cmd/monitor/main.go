@@ -14,6 +14,7 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
 	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/health"
@@ -48,6 +49,14 @@ func main() {
 		return
 	}
 
+	dbConn, err := db.OpenPostgres(context.Background(), cfg.Database.URL)
+	if err != nil {
+		logger.Error("failed to connect to postgres", "error", err)
+		return
+	}
+	defer dbConn.Close()
+	logger.Info("postgres connected")
+
 	swaggerHandler := swaggerhandler.NewHandler()
 
 	sites := toDomainSites(cfg.Sites, logger)
@@ -60,7 +69,7 @@ func main() {
 	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(siteRepository, checker.NewChecker(), logger)
 
 	pingHandler := pinghandler.NewHandler()
-	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt)
+	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt, db.NewPostgresChecker(dbConn))
 	healthHandler := healthhandler.NewHandler(healthChecker)
 
 	signals := make(chan os.Signal, 1)
