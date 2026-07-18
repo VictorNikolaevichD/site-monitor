@@ -28,18 +28,16 @@ go run -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Versi
 go build -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=v1.1.0-beta" -o site-monitor.exe ./cmd/monitor
 ```
 
-### Docker
-
-Сборка образа из корня проекта:
+### Docker Compose
 
 ```
-docker build -t site-monitor .
+docker compose up --build
 ```
 
-Запуск контейнера:
+Остановка:
 
 ```
-docker run --rm -p 8080:8080 -v ./configs/sites.yaml:/configs/sites.yaml:ro site-monitor
+docker compose down
 ```
 
 ### Генерация Swagger-документации
