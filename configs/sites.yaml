@@ -21,3 +21,5 @@ sites:
     name: Кремль
 interval: 60s
 http_addr: :8080
+log_level: info
+http_timeout: 10s

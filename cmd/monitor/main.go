@@ -41,13 +41,17 @@ import (
 func main() {
 	startedAt := time.Now()
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	logger.Info("site monitor started.")
+	bootstrapLogger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	bootstrapLogger.Info("site monitor started.")
 
-	cfg, err := getConfig(logger)
+	cfg, err := getConfig(bootstrapLogger)
 	if err != nil {
 		return
 	}
+
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: cfg.SlogLevel(),
+	}))
 
 	dbConn, err := db.OpenPostgres(context.Background(), cfg.Database.URL)
 	if err != nil {
@@ -66,7 +70,7 @@ func main() {
 	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository)
 	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository)
 	siteHandler := sitehandler.NewHandler(siteGetAllUseCase, siteAddUseCase, siteDeleteUseCase, siteGetStatusUseCase)
-	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(siteRepository, checker.NewChecker(), logger)
+	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(siteRepository, checker.NewChecker(cfg.HTTPTimeout), logger)
 
 	pingHandler := pinghandler.NewHandler()
 	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt, db.NewPostgresChecker(dbConn))
@@ -111,7 +115,13 @@ func getConfig(logger *slog.Logger) (*config.Config, error) {
 		return nil, err
 	}
 
-	logger.Info("config parsed", "sites_count", len(cfg.Sites), "interval", cfg.Interval)
+	logger.Info("config parsed",
+		"sites_count", len(cfg.Sites),
+		"interval", cfg.Interval,
+		"http_addr", cfg.HTTPAddr,
+		"log_level", cfg.LogLevel,
+		"http_timeout", cfg.HTTPTimeout,
+	)
 	return cfg, nil
 }
 

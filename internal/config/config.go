@@ -3,6 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
+	"log/slog"
 	"os"
 	"strings"
 	"time"
@@ -22,10 +23,13 @@ type Database struct {
 }
 
 type Config struct {
-	Sites    []Site        `yaml:"sites"`
-	Interval time.Duration `yaml:"interval"`
-	HTTPAddr string        `yaml:"http_addr"`
-	Database Database
+	Sites       []Site        `yaml:"sites"`
+	Interval    time.Duration `yaml:"interval" env:"CHECK_INTERVAL"`
+	HTTPAddr    string        `yaml:"http_addr"`
+	LogLevel    string        `yaml:"log_level" env:"LOG_LEVEL"`
+	HTTPTimeout time.Duration `yaml:"http_timeout" env:"HTTP_TIMEOUT"`
+	AppPort     int           `yaml:"-" env:"APP_PORT"`
+	Database    Database
 }
 
 func Load(path string) (*Config, error) {
@@ -46,11 +50,19 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse env config: %w", err)
 	}
 
+	cfg.applyEnvOverrides()
+
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("validate config: %w", err)
 	}
 
 	return &cfg, nil
+}
+
+func (c *Config) applyEnvOverrides() {
+	if c.AppPort != 0 {
+		c.HTTPAddr = fmt.Sprintf(":%d", c.AppPort)
+	}
 }
 
 func (c *Config) Validate() error {
@@ -62,5 +74,36 @@ func (c *Config) Validate() error {
 		return errors.New("http_addr is required")
 	}
 
+	if c.HTTPTimeout <= 0 {
+		return errors.New("http_timeout must be greater than zero")
+	}
+
+	if _, err := parseLogLevel(c.LogLevel); err != nil {
+		return err
+	}
+
 	return nil
+}
+
+func (c *Config) SlogLevel() slog.Level {
+	level, err := parseLogLevel(c.LogLevel)
+	if err != nil {
+		return slog.LevelInfo
+	}
+	return level
+}
+
+func parseLogLevel(value string) (slog.Level, error) {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "debug":
+		return slog.LevelDebug, nil
+	case "info":
+		return slog.LevelInfo, nil
+	case "warn":
+		return slog.LevelWarn, nil
+	case "error":
+		return slog.LevelError, nil
+	default:
+		return 0, fmt.Errorf("log_level must be one of: debug, info, warn, error")
+	}
 }

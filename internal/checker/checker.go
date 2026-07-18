@@ -18,10 +18,10 @@ type Checker struct {
 	client *http.Client
 }
 
-func NewChecker() *Checker {
+func NewChecker(timeout time.Duration) *Checker {
 	return &Checker{
 		client: &http.Client{
-			Timeout: time.Second * 10,
+			Timeout: timeout,
 		},
 	}
 }
