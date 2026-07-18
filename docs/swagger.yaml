@@ -1,0 +1,337 @@
+basePath: /api/v1
+consumes:
+- application/json
+definitions:
+  dto.AddSiteRequest:
+    properties:
+      name:
+        example: Example
+        type: string
+      url:
+        example: https://example.com
+        type: string
+    type: object
+  dto.HealthResponse:
+    properties:
+      status:
+        allOf:
+        - $ref: '#/definitions/health.Status'
+        example: healthy
+      time:
+        example: "2026-07-15T13:03:26.9795475+03:00"
+        type: string
+      uptime:
+        example: 729028
+        type: integer
+      version:
+        example: v1.0.0
+        type: string
+    type: object
+  dto.PingResponse:
+    properties:
+      message:
+        example: pong
+        type: string
+    type: object
+  dto.SiteResponse:
+    properties:
+      id:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      name:
+        example: Example
+        type: string
+      url:
+        example: https://example.com
+        type: string
+    type: object
+  dto.StatusResponse:
+    properties:
+      availability:
+        allOf:
+        - $ref: '#/definitions/site.Availability'
+        example: available
+      checked_at:
+        example: "2026-07-15T10:00:00Z"
+        type: string
+      code:
+        example: 200
+        type: integer
+      duration:
+        example: 245
+        type: integer
+      error:
+        example: context deadline exceeded
+        type: string
+      url:
+        example: https://example.com
+        type: string
+    type: object
+  handler.ErrorResponse:
+    properties:
+      error:
+        example: некорректный запрос
+        type: string
+    type: object
+  health.Status:
+    enum:
+    - healthy
+    - unhealthy
+    type: string
+    x-enum-varnames:
+    - StatusHealthy
+    - StatusUnhealthy
+  site.Availability:
+    enum:
+    - available
+    - unavailable
+    - unknown
+    type: string
+    x-enum-varnames:
+    - Available
+    - Unavailable
+    - Unknown
+info:
+  contact: {}
+  description: |-
+    REST API для управления сайтами и просмотра результатов мониторинга.
+    Опционально передавайте X-Request-ID в запросе; сервис вернёт его (или сгенерированный ID) в заголовке ответа X-Request-ID.
+  title: Site Monitor API
+  version: v1.0
+paths:
+  /health:
+    get:
+      description: Возвращает статус, uptime, текущее время и версию приложения
+      parameters:
+      - description: Идентификатор запроса для трассировки
+        in: header
+        name: X-Request-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+        "503":
+          description: Service Unavailable
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/dto.HealthResponse'
+      summary: Проверить готовность к работе
+      tags:
+      - system
+  /ping:
+    get:
+      description: Возвращает pong, если HTTP-сервер работает
+      parameters:
+      - description: Идентификатор запроса для трассировки
+        in: header
+        name: X-Request-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/dto.PingResponse'
+      summary: Проверить доступность сервиса
+      tags:
+      - system
+  /sites:
+    get:
+      description: Возвращает все сайты, добавленные в мониторинг
+      parameters:
+      - description: Идентификатор запроса для трассировки
+        in: header
+        name: X-Request-ID
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            items:
+              $ref: '#/definitions/dto.SiteResponse'
+            type: array
+      summary: Получить список сайтов
+      tags:
+      - sites
+    post:
+      consumes:
+      - application/json
+      description: Создаёт новый сайт для мониторинга
+      parameters:
+      - description: Идентификатор запроса для трассировки
+        in: header
+        name: X-Request-ID
+        type: string
+      - description: Данные сайта
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddSiteRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/dto.SiteResponse'
+        "400":
+          description: Некорректный JSON, URL или имя сайта
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "409":
+          description: Сайт с таким URL уже существует
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Добавить сайт
+      tags:
+      - sites
+  /sites/{id}:
+    delete:
+      description: Удаляет сайт из мониторинга по UUID
+      parameters:
+      - description: Идентификатор запроса для трассировки
+        in: header
+        name: X-Request-ID
+        type: string
+      - description: UUID сайта
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Сайт удалён
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+        "400":
+          description: Некорректный UUID сайта
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Сайт не найден
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Удалить сайт
+      tags:
+      - sites
+  /sites/{id}/status:
+    get:
+      description: Возвращает результат последней проверки сайта по UUID
+      parameters:
+      - description: Идентификатор запроса для трассировки
+        in: header
+        name: X-Request-ID
+        type: string
+      - description: UUID сайта
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/dto.StatusResponse'
+        "400":
+          description: Некорректный UUID сайта
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Сайт не найден
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить статус сайта
+      tags:
+      - sites
+produces:
+- application/json
+schemes:
+- http
+swagger: "2.0"
