@@ -62,6 +62,42 @@ docker volume rm site-monitor_site-monitor-postgres-data
 
 Имя volume может отличаться — смотреть `docker volume ls`.
 
+### Makefile
+
+Для упрощения типовых операций в корне проекта есть `Makefile`.
+
+Список команд:
+
+```
+make help
+```
+
+Основные цели:
+
+| Команда | Описание |
+|---------|----------|
+| `make build` | локальная сборка приложения |
+| `make docker-build` | сборка образов через Docker Compose |
+| `make clean` | очистка артефактов сборки |
+| `make run` | локальный запуск приложения |
+| `make up` | запуск всех сервисов |
+| `make down` | остановка сервисов |
+| `make restart` | перезапуск сервисов |
+| `make deps` | загрузка Go-зависимостей |
+| `make fmt` | форматирование кода |
+| `make test` | запуск тестов из `internal/tests` |
+| `make db-reset` | пересоздание БД (удаление volume) |
+| `make logs` | просмотр логов контейнеров |
+| `make ps` | статус контейнеров |
+| `make shell` | shell в контейнере приложения |
+
+Версию приложения можно задать через переменную `VERSION` (по умолчанию `dev`):
+
+```
+make build VERSION=v1.1.0-beta
+make up VERSION=v1.1.0-beta
+```
+
 ### Генерация Swagger-документации
 
 Из корня проекта:
