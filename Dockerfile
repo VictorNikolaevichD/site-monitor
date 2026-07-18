@@ -32,4 +32,4 @@ EXPOSE 8080
 
 ENTRYPOINT ["./site-monitor"]
 
-CMD ["-config", "/config/sites.yaml"]
+CMD ["-config", "/configs/sites.yaml"]

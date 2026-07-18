@@ -39,7 +39,7 @@ docker build -t site-monitor .
 Запуск контейнера:
 
 ```
-docker run --rm -p 8080:8080 -v ./configs/sites.yaml:/config/sites.yaml:ro site-monitor
+docker run --rm -p 8080:8080 -v ./configs/sites.yaml:/configs/sites.yaml:ro site-monitor
 ```
 
 ### Генерация Swagger-документации
