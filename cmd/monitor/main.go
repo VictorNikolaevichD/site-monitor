@@ -62,7 +62,7 @@ func main() {
 
 	swaggerHandler := swaggerhandler.NewHandler()
 
-	siteRepository := siterepo.NewPostgresSiteRepository()
+	siteRepository := siterepo.NewPostgresSiteRepository(logger)
 	siteGetAllUseCase := siteusecase.NewGetAllUseCase(siteRepository, dbConn)
 	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository, dbConn)
 	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository, dbConn)
