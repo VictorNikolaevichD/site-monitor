@@ -19,7 +19,13 @@ type Site struct {
 }
 
 type Database struct {
-	URL string `env:"DATABASE_URL,required,notEmpty"`
+	URL             string        `env:"DATABASE_URL,required,notEmpty"`
+	MaxConns        int32         `yaml:"max_conns" env:"DB_MAX_CONNS"`
+	MinConns        int32         `yaml:"min_conns" env:"DB_MIN_CONNS"`
+	MaxConnLifetime time.Duration `yaml:"max_conn_lifetime" env:"DB_MAX_CONN_LIFETIME"`
+	MaxConnIdleTime time.Duration `yaml:"max_conn_idle_time" env:"DB_MAX_CONN_IDLE_TIME"`
+	ConnectTimeout  time.Duration `yaml:"connect_timeout" env:"DB_CONNECT_TIMEOUT"`
+	QueryTimeout    time.Duration `yaml:"query_timeout" env:"DB_QUERY_TIMEOUT"`
 }
 
 type Config struct {
@@ -29,7 +35,7 @@ type Config struct {
 	LogLevel    string        `yaml:"log_level" env:"LOG_LEVEL"`
 	HTTPTimeout time.Duration `yaml:"http_timeout" env:"HTTP_TIMEOUT"`
 	AppPort     int           `yaml:"-" env:"APP_PORT"`
-	Database    Database
+	Database    Database      `yaml:"database"`
 }
 
 func Load(path string) (*Config, error) {

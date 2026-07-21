@@ -2,15 +2,16 @@ package db
 
 import (
 	"context"
-	"database/sql"
+
+	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type PostgresChecker struct {
-	db *sql.DB
+	pool *pgxpool.Pool
 }
 
-func NewPostgresChecker(db *sql.DB) *PostgresChecker {
-	return &PostgresChecker{db: db}
+func NewPostgresChecker(pool *pgxpool.Pool) *PostgresChecker {
+	return &PostgresChecker{pool: pool}
 }
 
 func (c *PostgresChecker) Name() string {
@@ -18,5 +19,5 @@ func (c *PostgresChecker) Name() string {
 }
 
 func (c *PostgresChecker) Check(ctx context.Context) error {
-	return c.db.PingContext(ctx)
+	return c.pool.Ping(ctx)
 }

@@ -53,7 +53,7 @@ func main() {
 		Level: cfg.SlogLevel(),
 	}))
 
-	dbConn, err := db.OpenPostgres(context.Background(), cfg.Database.URL)
+	dbConn, err := db.OpenPostgres(context.Background(), cfg.Database)
 	if err != nil {
 		logger.Error("failed to connect to postgres", "error", err)
 		return
