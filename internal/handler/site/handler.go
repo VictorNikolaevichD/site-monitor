@@ -1,6 +1,7 @@
 package site
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
@@ -13,19 +14,19 @@ import (
 )
 
 type getAllUseCase interface {
-	Execute() []domain.Site
+	Execute(ctx context.Context) ([]domain.Site, error)
 }
 
 type addUseCase interface {
-	Execute(command siteusecase.AddCommand) (domain.Site, error)
+	Execute(ctx context.Context, command siteusecase.AddCommand) (domain.Site, error)
 }
 
 type deleteByIDUseCase interface {
-	Execute(command siteusecase.DeleteCommand) error
+	Execute(ctx context.Context, command siteusecase.DeleteCommand) error
 }
 
 type getStatusByIDUseCase interface {
-	Execute(command siteusecase.GetStatusCommand) (domain.Site, error)
+	Execute(ctx context.Context, command siteusecase.GetStatusCommand) (domain.Site, error)
 }
 
 type Handler struct {
@@ -56,10 +57,17 @@ func NewHandler(
 // @Produce json
 // @Param X-Request-ID header string false "Идентификатор запроса для трассировки"
 // @Success 200 {array} dto.SiteResponse
+// @Failure 500 {object} handler.ErrorResponse "Внутренняя ошибка сервера"
 // @Header 200 {string} X-Request-ID "Идентификатор запроса"
+// @Header 500 {string} X-Request-ID "Идентификатор запроса"
 // @Router /sites [get]
-func (h *Handler) GetAll(w http.ResponseWriter, _ *http.Request) {
-	sites := h.getAllUseCase.Execute()
+func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
+	sites, err := h.getAllUseCase.Execute(r.Context())
+	if err != nil {
+		mappedError := mapError(err)
+		handler.WriteError(w, mappedError.Status, mappedError.Message)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(dto.ToSiteResponses(sites))
@@ -93,7 +101,7 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	site, err := h.addUseCase.Execute(siteusecase.AddCommand{
+	site, err := h.addUseCase.Execute(r.Context(), siteusecase.AddCommand{
 		URL:  request.URL,
 		Name: request.Name,
 	})
@@ -132,7 +140,7 @@ func (h *Handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.deleteUseCase.Execute(siteusecase.DeleteCommand{
+	err = h.deleteUseCase.Execute(r.Context(), siteusecase.DeleteCommand{
 		ID: id,
 	})
 	if err != nil {
@@ -168,7 +176,7 @@ func (h *Handler) GetStatusByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	site, err := h.getStatusUseCase.Execute(siteusecase.GetStatusCommand{
+	site, err := h.getStatusUseCase.Execute(r.Context(), siteusecase.GetStatusCommand{
 		ID: id,
 	})
 	if err != nil {

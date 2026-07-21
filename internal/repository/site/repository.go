@@ -1,6 +1,7 @@
 package site
 
 import (
+	"context"
 	"sync"
 
 	"github.com/google/uuid"
@@ -25,7 +26,7 @@ func NewRepository(sites []domain.Site) *Repository {
 	}
 }
 
-func (r *Repository) GetAll() []domain.Site {
+func (r *Repository) GetAll(ctx context.Context) ([]domain.Site, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
@@ -33,10 +34,10 @@ func (r *Repository) GetAll() []domain.Site {
 	for _, rec := range r.storage {
 		records = append(records, rec)
 	}
-	return records
+	return records, nil
 }
 
-func (r *Repository) AddIfAbsent(site domain.Site) (domain.Site, error) {
+func (r *Repository) AddIfAbsent(ctx context.Context, site domain.Site) (domain.Site, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -50,7 +51,7 @@ func (r *Repository) AddIfAbsent(site domain.Site) (domain.Site, error) {
 	return site, nil
 }
 
-func (r *Repository) DeleteByID(id uuid.UUID) error {
+func (r *Repository) DeleteByID(ctx context.Context, id uuid.UUID) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -62,7 +63,7 @@ func (r *Repository) DeleteByID(id uuid.UUID) error {
 	return nil
 }
 
-func (r *Repository) UpdateLastCheckByID(id uuid.UUID, checkStatus domain.CheckStatus) (domain.Site, error) {
+func (r *Repository) UpdateLastCheckByID(ctx context.Context, id uuid.UUID, checkStatus domain.CheckStatus) (domain.Site, error) {
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
@@ -77,7 +78,7 @@ func (r *Repository) UpdateLastCheckByID(id uuid.UUID, checkStatus domain.CheckS
 	return site, nil
 }
 
-func (r *Repository) GetByID(id uuid.UUID) (domain.Site, error) {
+func (r *Repository) GetByID(ctx context.Context, id uuid.UUID) (domain.Site, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 

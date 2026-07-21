@@ -1,11 +1,13 @@
 package site
 
 import (
+	"context"
+
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
 type getAllRepository interface {
-	GetAll() []domain.Site
+	GetAll(ctx context.Context) ([]domain.Site, error)
 }
 
 type GetAllUseCase struct {
@@ -18,6 +20,6 @@ func NewGetAllUseCase(repository getAllRepository) *GetAllUseCase {
 	}
 }
 
-func (u *GetAllUseCase) Execute() []domain.Site {
-	return u.repo.GetAll()
+func (u *GetAllUseCase) Execute(ctx context.Context) ([]domain.Site, error) {
+	return u.repo.GetAll(ctx)
 }

@@ -10,4 +10,5 @@ var (
 	ErrNameRequired = errors.New("site name is required")
 
 	ErrSiteNotFound = errors.New("site not found")
+	ErrStorage      = errors.New("storage error")
 )

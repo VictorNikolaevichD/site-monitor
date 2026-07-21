@@ -1,9 +1,13 @@
 package site
 
-import "github.com/google/uuid"
+import (
+	"context"
+
+	"github.com/google/uuid"
+)
 
 type deleteByIDRepository interface {
-	DeleteByID(id uuid.UUID) error
+	DeleteByID(ctx context.Context, id uuid.UUID) error
 }
 
 type DeleteCommand struct {
@@ -20,11 +24,6 @@ func NewDeleteUseCase(repository deleteByIDRepository) *DeleteUseCase {
 	}
 }
 
-func (u *DeleteUseCase) Execute(command DeleteCommand) error {
-	err := u.repo.DeleteByID(command.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (u *DeleteUseCase) Execute(ctx context.Context, command DeleteCommand) error {
+	return u.repo.DeleteByID(ctx, command.ID)
 }

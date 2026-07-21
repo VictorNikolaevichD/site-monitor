@@ -1,12 +1,14 @@
 package site
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
 type getByIDRepository interface {
-	GetByID(id uuid.UUID) (domain.Site, error)
+	GetByID(ctx context.Context, id uuid.UUID) (domain.Site, error)
 }
 
 type GetStatusCommand struct {
@@ -23,11 +25,6 @@ func NewGetStatusUseCase(repository getByIDRepository) *GetStatusUseCase {
 	}
 }
 
-func (u *GetStatusUseCase) Execute(command GetStatusCommand) (domain.Site, error) {
-	site, err := u.repo.GetByID(command.ID)
-	if err != nil {
-		return domain.Site{}, err
-	}
-
-	return site, nil
+func (u *GetStatusUseCase) Execute(ctx context.Context, command GetStatusCommand) (domain.Site, error) {
+	return u.repo.GetByID(ctx, command.ID)
 }

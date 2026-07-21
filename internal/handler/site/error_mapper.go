@@ -40,6 +40,11 @@ func mapError(err error) ErrorMapping {
 			Status:  http.StatusNotFound,
 			Message: messageSiteIDNotFound,
 		}
+	case errors.Is(err, domain.ErrStorage):
+		return ErrorMapping{
+			Status:  http.StatusInternalServerError,
+			Message: messageInternalError,
+		}
 	default:
 		return ErrorMapping{
 			Status:  http.StatusInternalServerError,

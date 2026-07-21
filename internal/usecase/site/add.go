@@ -1,11 +1,13 @@
 package site
 
 import (
+	"context"
+
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
 type addIfAbsentRepository interface {
-	AddIfAbsent(site domain.Site) (domain.Site, error)
+	AddIfAbsent(ctx context.Context, site domain.Site) (domain.Site, error)
 }
 
 type AddCommand struct {
@@ -23,13 +25,13 @@ func NewAddUseCase(repository addIfAbsentRepository) *AddUseCase {
 	}
 }
 
-func (u *AddUseCase) Execute(command AddCommand) (domain.Site, error) {
+func (u *AddUseCase) Execute(ctx context.Context, command AddCommand) (domain.Site, error) {
 	site, err := domain.NewSite(command.URL, command.Name)
 	if err != nil {
 		return domain.Site{}, err
 	}
 
-	site, err = u.repo.AddIfAbsent(site)
+	site, err = u.repo.AddIfAbsent(ctx, site)
 	if err != nil {
 		return domain.Site{}, err
 	}
