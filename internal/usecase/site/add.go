@@ -3,6 +3,8 @@ package site
 import (
 	"context"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
@@ -17,11 +19,13 @@ type AddCommand struct {
 
 type AddUseCase struct {
 	repo addIfAbsentRepository
+	pool *pgxpool.Pool
 }
 
-func NewAddUseCase(repository addIfAbsentRepository) *AddUseCase {
+func NewAddUseCase(repository addIfAbsentRepository, pool *pgxpool.Pool) *AddUseCase {
 	return &AddUseCase{
 		repo: repository,
+		pool: pool,
 	}
 }
 
@@ -31,10 +35,20 @@ func (u *AddUseCase) Execute(ctx context.Context, command AddCommand) (domain.Si
 		return domain.Site{}, err
 	}
 
-	site, err = u.repo.AddIfAbsent(ctx, site)
+	tx, err := u.pool.Begin(ctx)
+	if err != nil {
+		return domain.Site{}, domain.ErrStorage
+	}
+	defer tx.Rollback(ctx)
+
+	created, err := u.repo.AddIfAbsent(db.WithConn(ctx, tx), site)
 	if err != nil {
 		return domain.Site{}, err
 	}
 
-	return site, nil
+	if err := tx.Commit(ctx); err != nil {
+		return domain.Site{}, domain.ErrStorage
+	}
+
+	return created, nil
 }

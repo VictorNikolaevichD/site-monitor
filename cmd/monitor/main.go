@@ -15,7 +15,6 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
 	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/health"
 	pinghandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping"
@@ -63,14 +62,18 @@ func main() {
 
 	swaggerHandler := swaggerhandler.NewHandler()
 
-	sites := toDomainSites(cfg.Sites, logger)
-	siteRepository := siterepo.NewRepository(sites)
-	siteGetAllUseCase := siteusecase.NewGetAllUseCase(siteRepository)
-	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository)
-	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository)
-	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository)
+	siteRepository := siterepo.NewPostgresSiteRepository()
+	siteGetAllUseCase := siteusecase.NewGetAllUseCase(siteRepository, dbConn)
+	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository, dbConn)
+	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository, dbConn)
+	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository, dbConn)
 	siteHandler := sitehandler.NewHandler(siteGetAllUseCase, siteAddUseCase, siteDeleteUseCase, siteGetStatusUseCase)
-	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(siteRepository, checker.NewChecker(cfg.HTTPTimeout), logger)
+	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(
+		siteRepository,
+		checker.NewChecker(cfg.HTTPTimeout),
+		dbConn,
+		logger,
+	)
 
 	pingHandler := pinghandler.NewHandler()
 	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt, db.NewPostgresChecker(dbConn))
@@ -129,19 +132,4 @@ func runServer(server *http.Server, cfg *config.Config, logger *slog.Logger) {
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Error("failed to start http server", "http_addr", cfg.HTTPAddr)
 	}
-}
-
-func toDomainSites(cfgSites []config.Site, logger *slog.Logger) []domain.Site {
-	sites := make([]domain.Site, 0, len(cfgSites))
-
-	for _, cfgS := range cfgSites {
-		site, err := domain.NewSite(cfgS.URL, cfgS.Name)
-		if err != nil {
-			logger.Error("failed to create site", "error", err, "url", cfgS.URL, "name", cfgS.Name)
-			continue
-		}
-		sites = append(sites, site)
-	}
-
-	return sites
 }

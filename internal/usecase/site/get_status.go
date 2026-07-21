@@ -4,6 +4,8 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
@@ -17,14 +19,17 @@ type GetStatusCommand struct {
 
 type GetStatusUseCase struct {
 	repo getByIDRepository
+	pool *pgxpool.Pool
 }
 
-func NewGetStatusUseCase(repository getByIDRepository) *GetStatusUseCase {
+func NewGetStatusUseCase(repository getByIDRepository, pool *pgxpool.Pool) *GetStatusUseCase {
 	return &GetStatusUseCase{
 		repo: repository,
+		pool: pool,
 	}
 }
 
 func (u *GetStatusUseCase) Execute(ctx context.Context, command GetStatusCommand) (domain.Site, error) {
+	ctx = db.WithConn(ctx, u.pool)
 	return u.repo.GetByID(ctx, command.ID)
 }

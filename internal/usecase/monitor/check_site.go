@@ -6,7 +6,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	checker "gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
@@ -22,18 +24,27 @@ type siteChecker interface {
 type CheckSiteUseCase struct {
 	repo        siteRepository
 	siteChecker siteChecker
+	pool        *pgxpool.Pool
 	logger      *slog.Logger
 }
 
-func NewCheckSiteUseCase(repository siteRepository, checker siteChecker, logger *slog.Logger) *CheckSiteUseCase {
+func NewCheckSiteUseCase(
+	repository siteRepository,
+	checker siteChecker,
+	pool *pgxpool.Pool,
+	logger *slog.Logger,
+) *CheckSiteUseCase {
 	return &CheckSiteUseCase{
 		repo:        repository,
 		siteChecker: checker,
+		pool:        pool,
 		logger:      logger,
 	}
 }
 
 func (u *CheckSiteUseCase) Execute(ctx context.Context) {
+	ctx = db.WithConn(ctx, u.pool)
+
 	sites, err := u.repo.GetAll(ctx)
 	if err != nil {
 		u.logger.Error("failed to get sites", "error", err)
