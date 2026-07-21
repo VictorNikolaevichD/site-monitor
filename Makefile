@@ -1,8 +1,16 @@
 .PHONY: build docker-build clean
 
+ifneq (,$(wildcard ./.env))
+include .env
+export
+endif
+
 BINARY := site-monitor$(shell go env GOEXE)
 VERSION ?= dev
 LDFLAGS := -X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=$(VERSION)
+MIGRATIONS_DIR := migrations
+GOOSE ?= go tool goose
+MIGRATE_DATABASE_URL ?= postgres://$(DB_USER):$(DB_PASSWORD)@localhost:$(POSTGRES_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
 
 # 1. Команды сборки
 
@@ -58,15 +66,22 @@ test:
 
 # 4. Команды для работы с БД
 
-.PHONY: db-reset
+.PHONY: db-reset migrate-up migrate-up-head migrate-down migrate-down-base migrate-version
 
-# TODO: make migrate-up — применение миграций (когда появятся миграции)
-# migrate-up:
-# 	...
+migrate-up:
+	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(MIGRATE_DATABASE_URL)" up-by-one
 
-# TODO: make migrate-down — откат миграций (когда появятся миграции)
-# migrate-down:
-# 	...
+migrate-up-head:
+	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(MIGRATE_DATABASE_URL)" up
+
+migrate-down:
+	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(MIGRATE_DATABASE_URL)" down
+
+migrate-down-base:
+	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(MIGRATE_DATABASE_URL)" down-to 0
+
+migrate-version:
+	$(GOOSE) -dir $(MIGRATIONS_DIR) postgres "$(MIGRATE_DATABASE_URL)" version
 
 db-reset:
 	docker compose down -v
@@ -105,8 +120,11 @@ help:
 	@echo   make test               - run tests (internal/tests)
 	@echo.
 	@echo Database:
-	@echo   make migrate-up         - TODO: apply migrations
-	@echo   make migrate-down       - TODO: rollback migrations
+	@echo   make migrate-up         - apply next migration (one step)
+	@echo   make migrate-up-head    - apply all pending migrations
+	@echo   make migrate-down       - rollback last migration (one step)
+	@echo   make migrate-down-base  - rollback all migrations to base
+	@echo   make migrate-version    - show current database version
 	@echo   make db-reset           - recreate DB (remove volume)
 	@echo.
 	@echo Helpers:
