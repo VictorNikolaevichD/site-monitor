@@ -66,11 +66,12 @@ func (r *PostgresSiteRepository) AddIfAbsent(ctx context.Context, site domain.Si
 		return domain.Site{}, domain.ErrStorage
 	}
 
+	now := time.Now().UTC()
 	tag, err := conn.Exec(ctx, `
-		INSERT INTO sites (id, url, name)
-		VALUES ($1, $2, $3)
+		INSERT INTO sites (id, url, name, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5)
 		ON CONFLICT (url) DO NOTHING
-	`, site.ID, site.URL, site.Name)
+	`, site.ID, site.URL, site.Name, now, now)
 	if err != nil {
 		return domain.Site{}, domain.ErrStorage
 	}
@@ -141,6 +142,15 @@ func (r *PostgresSiteRepository) UpdateLastCheckByID(
 		checkStatus.Error,
 		checkStatus.CheckedAt,
 	)
+	if err != nil {
+		return domain.Site{}, domain.ErrStorage
+	}
+
+	_, err = conn.Exec(ctx, `
+		UPDATE sites
+		SET updated_at = $2
+		WHERE id = $1
+	`, id, time.Now().UTC())
 	if err != nil {
 		return domain.Site{}, domain.ErrStorage
 	}
