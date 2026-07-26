@@ -66,8 +66,8 @@ func main() {
 	siteRepository := siterepo.NewPostgresSiteRepository(logger)
 	checkResultRepository := checkresultrepo.NewPostgresCheckResultRepository(logger)
 	siteGetAllUseCase := siteusecase.NewGetAllUseCase(siteRepository, dbConn)
-	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository, dbConn)
-	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository, checkResultRepository, dbConn)
+	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository, dbConn, logger)
+	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository, checkResultRepository, dbConn, logger)
 	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository, checkResultRepository, dbConn)
 	siteHandler := sitehandler.NewHandler(siteGetAllUseCase, siteAddUseCase, siteDeleteUseCase, siteGetStatusUseCase)
 	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(

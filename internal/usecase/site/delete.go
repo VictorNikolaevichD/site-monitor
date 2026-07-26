@@ -3,6 +3,7 @@ package site
 import (
 	"context"
 	"errors"
+	"log/slog"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -27,22 +28,25 @@ type DeleteUseCase struct {
 	sites        deleteSiteRepository
 	checkResults deleteCheckResultsRepository
 	pool         *pgxpool.Pool
+	logger       *slog.Logger
 }
 
 func NewDeleteUseCase(
 	sites deleteSiteRepository,
 	checkResults deleteCheckResultsRepository,
 	pool *pgxpool.Pool,
+	logger *slog.Logger,
 ) *DeleteUseCase {
 	return &DeleteUseCase{
 		sites:        sites,
 		checkResults: checkResults,
 		pool:         pool,
+		logger:       logger,
 	}
 }
 
 func (u *DeleteUseCase) Execute(ctx context.Context, command DeleteCommand) error {
-	err := db.WithinTx(ctx, u.pool, func(ctx context.Context) error {
+	err := db.WithinTx(ctx, u.pool, u.logger, func(ctx context.Context) error {
 		if _, err := u.sites.GetByIDForUpdate(ctx, command.ID); err != nil {
 			return err
 		}
