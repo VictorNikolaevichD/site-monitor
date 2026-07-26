@@ -69,7 +69,14 @@ func main() {
 	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository, dbConn, logger)
 	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository, checkResultRepository, dbConn, logger)
 	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository, checkResultRepository, dbConn)
-	siteHandler := sitehandler.NewHandler(siteGetAllUseCase, siteAddUseCase, siteDeleteUseCase, siteGetStatusUseCase)
+	siteGetHistoryUseCase := siteusecase.NewGetHistoryUseCase(siteRepository, checkResultRepository, dbConn)
+	siteHandler := sitehandler.NewHandler(
+		siteGetAllUseCase,
+		siteAddUseCase,
+		siteDeleteUseCase,
+		siteGetStatusUseCase,
+		siteGetHistoryUseCase,
+	)
 	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(
 		siteRepository,
 		checkResultRepository,

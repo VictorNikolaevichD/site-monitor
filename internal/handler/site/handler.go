@@ -3,7 +3,9 @@ package site
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 
@@ -29,11 +31,16 @@ type getStatusByIDUseCase interface {
 	Execute(ctx context.Context, command siteusecase.GetStatusCommand) (domain.Site, error)
 }
 
+type getHistoryByIDUseCase interface {
+	Execute(ctx context.Context, command siteusecase.GetHistoryCommand) (siteusecase.GetHistoryResult, error)
+}
+
 type Handler struct {
-	getAllUseCase    getAllUseCase
-	addUseCase       addUseCase
-	deleteUseCase    deleteByIDUseCase
-	getStatusUseCase getStatusByIDUseCase
+	getAllUseCase     getAllUseCase
+	addUseCase        addUseCase
+	deleteUseCase     deleteByIDUseCase
+	getStatusUseCase  getStatusByIDUseCase
+	getHistoryUseCase getHistoryByIDUseCase
 }
 
 func NewHandler(
@@ -41,12 +48,14 @@ func NewHandler(
 	addUseCase addUseCase,
 	deleteUseCase deleteByIDUseCase,
 	getStatusUseCase getStatusByIDUseCase,
+	getHistoryUseCase getHistoryByIDUseCase,
 ) *Handler {
 	return &Handler{
-		getAllUseCase:    getAllUseCase,
-		addUseCase:       addUseCase,
-		deleteUseCase:    deleteUseCase,
-		getStatusUseCase: getStatusUseCase,
+		getAllUseCase:     getAllUseCase,
+		addUseCase:        addUseCase,
+		deleteUseCase:     deleteUseCase,
+		getStatusUseCase:  getStatusUseCase,
+		getHistoryUseCase: getHistoryUseCase,
 	}
 }
 
@@ -188,4 +197,75 @@ func (h *Handler) GetStatusByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(dto.ToStatusResponse(site))
+}
+
+// GetHistoryByID godoc
+// @Summary Получить историю проверок сайта
+// @Description Возвращает пагинированную историю проверок сайта по UUID
+// @Tags sites
+// @Produce json
+// @Param X-Request-ID header string false "Идентификатор запроса для трассировки"
+// @Param id path string true "UUID сайта" Format(uuid)
+// @Param limit query int false "Размер страницы (по умолчанию 20, максимум 100)"
+// @Param offset query int false "Смещение (по умолчанию 0)"
+// @Success 200 {object} dto.CheckHistoryResponse
+// @Failure 400 {object} handler.ErrorResponse "Некорректный UUID сайта или параметры пагинации"
+// @Failure 404 {object} handler.ErrorResponse "Сайт не найден"
+// @Failure 500 {object} handler.ErrorResponse "Внутренняя ошибка сервера"
+// @Header 200 {string} X-Request-ID "Идентификатор запроса"
+// @Header 400 {string} X-Request-ID "Идентификатор запроса"
+// @Header 404 {string} X-Request-ID "Идентификатор запроса"
+// @Header 500 {string} X-Request-ID "Идентификатор запроса"
+// @Router /sites/{id}/history [get]
+func (h *Handler) GetHistoryByID(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		handler.WriteError(w, http.StatusBadRequest, messageInvalidSiteID)
+		return
+	}
+
+	limit, err := parseOptionalNonNegativeInt(r.URL.Query().Get("limit"), messageInvalidLimit)
+	if err != nil {
+		handler.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	offset, err := parseOptionalNonNegativeInt(r.URL.Query().Get("offset"), messageInvalidOffset)
+	if err != nil {
+		handler.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.getHistoryUseCase.Execute(r.Context(), siteusecase.GetHistoryCommand{
+		SiteID: id,
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		mappedError := mapError(err)
+		handler.WriteError(w, mappedError.Status, mappedError.Message)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(dto.ToCheckHistoryResponse(
+		result.Items,
+		result.Total,
+		result.Limit,
+		result.Offset,
+	))
+}
+
+func parseOptionalNonNegativeInt(raw, invalidMessage string) (int, error) {
+	if raw == "" {
+		return 0, nil
+	}
+
+	value, err := strconv.Atoi(raw)
+	if err != nil || value < 0 {
+		return 0, errors.New(invalidMessage)
+	}
+
+	return value, nil
 }

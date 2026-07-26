@@ -134,6 +134,18 @@ const docTemplate = `{
                                 "description": "Идентификатор запроса"
                             }
                         }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
+                        }
                     }
                 }
             },
@@ -293,6 +305,96 @@ const docTemplate = `{
                 }
             }
         },
+        "/sites/{id}/history": {
+            "get": {
+                "description": "Возвращает пагинированную историю проверок сайта по UUID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "sites"
+                ],
+                "summary": "Получить историю проверок сайта",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор запроса для трассировки",
+                        "name": "X-Request-ID",
+                        "in": "header"
+                    },
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "UUID сайта",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Размер страницы (по умолчанию 20, максимум 100)",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Смещение (по умолчанию 0)",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.CheckHistoryResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Некорректный UUID сайта или параметры пагинации",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Сайт не найден",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Внутренняя ошибка сервера",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ErrorResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/sites/{id}/status": {
             "get": {
                 "description": "Возвращает результат последней проверки сайта по UUID",
@@ -386,6 +488,53 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.CheckHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "pagination": {
+                    "$ref": "#/definitions/dto.PaginationMeta"
+                },
+                "result": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.CheckResultResponse"
+                    }
+                }
+            }
+        },
+        "dto.CheckResultResponse": {
+            "type": "object",
+            "properties": {
+                "availability": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/site.Availability"
+                        }
+                    ],
+                    "example": "available"
+                },
+                "checked_at": {
+                    "type": "string",
+                    "example": "2026-07-15T10:00:00Z"
+                },
+                "code": {
+                    "type": "integer",
+                    "example": 200
+                },
+                "duration": {
+                    "type": "integer",
+                    "example": 245
+                },
+                "error": {
+                    "type": "string",
+                    "example": ""
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "dto.HealthResponse": {
             "type": "object",
             "properties": {
@@ -408,6 +557,23 @@ const docTemplate = `{
                 "version": {
                     "type": "string",
                     "example": "v1.0.0"
+                }
+            }
+        },
+        "dto.PaginationMeta": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer",
+                    "example": 20
+                },
+                "offset": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 42
                 }
             }
         },

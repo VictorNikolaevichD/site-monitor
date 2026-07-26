@@ -52,3 +52,33 @@ func ToStatusResponse(site domain.Site) StatusResponse {
 
 	return response
 }
+
+func ToCheckResultResponse(result domain.CheckResult) CheckResultResponse {
+	return CheckResultResponse{
+		ID:           result.ID,
+		Availability: result.Availability,
+		Code:         result.Code,
+		Duration:     result.Duration.Milliseconds(),
+		Error:        result.Error,
+		CheckedAt:    result.CheckedAt,
+	}
+}
+
+func ToCheckHistoryResponse(
+	items []domain.CheckResult,
+	total, limit, offset int,
+) CheckHistoryResponse {
+	result := make([]CheckResultResponse, 0, len(items))
+	for _, item := range items {
+		result = append(result, ToCheckResultResponse(item))
+	}
+
+	return CheckHistoryResponse{
+		Result: result,
+		Pagination: PaginationMeta{
+			Total:  total,
+			Limit:  limit,
+			Offset: offset,
+		},
+	}
+}

@@ -56,7 +56,7 @@ func (r *PostgresCheckResultRepository) GetBySiteID(
 	ctx context.Context,
 	siteID uuid.UUID,
 	limit, offset int,
-) ([]domain.CheckStatus, error) {
+) ([]domain.CheckResult, error) {
 	conn, err := db.ConnFromContext(ctx)
 	if err != nil {
 		r.logger.Error("get check results by site id: connection not in context", "error", err)
@@ -64,7 +64,7 @@ func (r *PostgresCheckResultRepository) GetBySiteID(
 	}
 
 	rows, err := conn.Query(ctx, `
-		SELECT http_code, duration_ns, availability, error, checked_at
+		SELECT id, http_code, duration_ns, availability, error, checked_at
 		FROM check_results
 		WHERE site_id = $1
 		ORDER BY checked_at DESC
@@ -76,14 +76,14 @@ func (r *PostgresCheckResultRepository) GetBySiteID(
 	}
 	defer rows.Close()
 
-	results := make([]domain.CheckStatus, 0)
+	results := make([]domain.CheckResult, 0)
 	for rows.Next() {
-		status, err := scanCheckStatus(rows)
+		result, err := scanCheckResult(rows)
 		if err != nil {
 			r.logger.Error("get check results by site id: scan failed", "error", err, "site_id", siteID)
 			return nil, domain.ErrStorage
 		}
-		results = append(results, status)
+		results = append(results, result)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -92,6 +92,27 @@ func (r *PostgresCheckResultRepository) GetBySiteID(
 	}
 
 	return results, nil
+}
+
+func (r *PostgresCheckResultRepository) CountBySiteID(ctx context.Context, siteID uuid.UUID) (int, error) {
+	conn, err := db.ConnFromContext(ctx)
+	if err != nil {
+		r.logger.Error("count check results by site id: connection not in context", "error", err)
+		return 0, domain.ErrStorage
+	}
+
+	var total int
+	err = conn.QueryRow(ctx, `
+		SELECT COUNT(*)
+		FROM check_results
+		WHERE site_id = $1
+	`, siteID).Scan(&total)
+	if err != nil {
+		r.logger.Error("count check results by site id: query failed", "error", err, "site_id", siteID)
+		return 0, domain.ErrStorage
+	}
+
+	return total, nil
 }
 
 func (r *PostgresCheckResultRepository) GetLatestBySiteID(
@@ -143,11 +164,35 @@ func (r *PostgresCheckResultRepository) DeleteBySiteID(ctx context.Context, site
 	return nil
 }
 
-type checkStatusScanner interface {
+type scanner interface {
 	Scan(dest ...any) error
 }
 
-func scanCheckStatus(row checkStatusScanner) (domain.CheckStatus, error) {
+func scanCheckResult(row scanner) (domain.CheckResult, error) {
+	var (
+		id           int64
+		httpCode     int
+		durationNs   int64
+		availability bool
+		checkError   string
+		checkedAt    time.Time
+	)
+
+	if err := row.Scan(&id, &httpCode, &durationNs, &availability, &checkError, &checkedAt); err != nil {
+		return domain.CheckResult{}, err
+	}
+
+	return domain.CheckResult{
+		ID:           id,
+		Availability: availabilityFromBool(availability),
+		Code:         httpCode,
+		CheckedAt:    checkedAt,
+		Duration:     time.Duration(durationNs),
+		Error:        checkError,
+	}, nil
+}
+
+func scanCheckStatus(row scanner) (domain.CheckStatus, error) {
 	var (
 		httpCode     int
 		durationNs   int64
@@ -160,16 +205,18 @@ func scanCheckStatus(row checkStatusScanner) (domain.CheckStatus, error) {
 		return domain.CheckStatus{}, err
 	}
 
-	avail := domain.Unavailable
-	if availability {
-		avail = domain.Available
-	}
-
 	return domain.CheckStatus{
-		Availability: avail,
+		Availability: availabilityFromBool(availability),
 		Code:         httpCode,
 		CheckedAt:    checkedAt,
 		Duration:     time.Duration(durationNs),
 		Error:        checkError,
 	}, nil
+}
+
+func availabilityFromBool(availability bool) domain.Availability {
+	if availability {
+		return domain.Available
+	}
+	return domain.Unavailable
 }

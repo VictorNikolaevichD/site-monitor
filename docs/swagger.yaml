@@ -11,6 +11,37 @@ definitions:
         example: https://example.com
         type: string
     type: object
+  dto.CheckHistoryResponse:
+    properties:
+      pagination:
+        $ref: '#/definitions/dto.PaginationMeta'
+      result:
+        items:
+          $ref: '#/definitions/dto.CheckResultResponse'
+        type: array
+    type: object
+  dto.CheckResultResponse:
+    properties:
+      availability:
+        allOf:
+        - $ref: '#/definitions/site.Availability'
+        example: available
+      checked_at:
+        example: "2026-07-15T10:00:00Z"
+        type: string
+      code:
+        example: 200
+        type: integer
+      duration:
+        example: 245
+        type: integer
+      error:
+        example: ""
+        type: string
+      id:
+        example: 1
+        type: integer
+    type: object
   dto.HealthResponse:
     properties:
       status:
@@ -26,6 +57,18 @@ definitions:
       version:
         example: v1.0.0
         type: string
+    type: object
+  dto.PaginationMeta:
+    properties:
+      limit:
+        example: 20
+        type: integer
+      offset:
+        example: 0
+        type: integer
+      total:
+        example: 42
+        type: integer
     type: object
   dto.PingResponse:
     properties:
@@ -172,6 +215,14 @@ paths:
             items:
               $ref: '#/definitions/dto.SiteResponse'
             type: array
+        "500":
+          description: Внутренняя ошибка сервера
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
       summary: Получить список сайтов
       tags:
       - sites
@@ -276,6 +327,66 @@ paths:
           schema:
             $ref: '#/definitions/handler.ErrorResponse'
       summary: Удалить сайт
+      tags:
+      - sites
+  /sites/{id}/history:
+    get:
+      description: Возвращает пагинированную историю проверок сайта по UUID
+      parameters:
+      - description: Идентификатор запроса для трассировки
+        in: header
+        name: X-Request-ID
+        type: string
+      - description: UUID сайта
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Размер страницы (по умолчанию 20, максимум 100)
+        in: query
+        name: limit
+        type: integer
+      - description: Смещение (по умолчанию 0)
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/dto.CheckHistoryResponse'
+        "400":
+          description: Некорректный UUID сайта или параметры пагинации
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "404":
+          description: Сайт не найден
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+        "500":
+          description: Внутренняя ошибка сервера
+          headers:
+            X-Request-ID:
+              description: Идентификатор запроса
+              type: string
+          schema:
+            $ref: '#/definitions/handler.ErrorResponse'
+      summary: Получить историю проверок сайта
       tags:
       - sites
   /sites/{id}/status:
