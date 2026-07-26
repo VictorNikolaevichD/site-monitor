@@ -22,6 +22,7 @@ import (
 	swaggerhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/swagger"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/health"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/middleware"
+	checkresultrepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/checkresult"
 	siterepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/scheduler"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/server"
@@ -63,13 +64,15 @@ func main() {
 	swaggerHandler := swaggerhandler.NewHandler()
 
 	siteRepository := siterepo.NewPostgresSiteRepository(logger)
+	checkResultRepository := checkresultrepo.NewPostgresCheckResultRepository(logger)
 	siteGetAllUseCase := siteusecase.NewGetAllUseCase(siteRepository, dbConn)
 	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository, dbConn)
 	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository, dbConn)
-	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository, dbConn)
+	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository, checkResultRepository, dbConn)
 	siteHandler := sitehandler.NewHandler(siteGetAllUseCase, siteAddUseCase, siteDeleteUseCase, siteGetStatusUseCase)
 	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(
 		siteRepository,
+		checkResultRepository,
 		checker.NewChecker(cfg.HTTPTimeout),
 		dbConn,
 		logger,

@@ -63,21 +63,6 @@ func (r *Repository) DeleteByID(ctx context.Context, id uuid.UUID) error {
 	return nil
 }
 
-func (r *Repository) UpdateLastCheckByID(ctx context.Context, id uuid.UUID, checkStatus domain.CheckStatus) (domain.Site, error) {
-	r.mu.Lock()
-	defer r.mu.Unlock()
-
-	site, exists := r.storage[id]
-	if !exists {
-		return domain.Site{}, domain.ErrSiteNotFound
-	}
-
-	site.LastCheck = &checkStatus
-	r.storage[id] = site
-
-	return site, nil
-}
-
 func (r *Repository) GetByID(ctx context.Context, id uuid.UUID) (domain.Site, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
