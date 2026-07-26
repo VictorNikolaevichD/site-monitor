@@ -124,6 +124,25 @@ func (r *PostgresCheckResultRepository) GetLatestBySiteID(
 	return status, nil
 }
 
+func (r *PostgresCheckResultRepository) DeleteBySiteID(ctx context.Context, siteID uuid.UUID) error {
+	conn, err := db.ConnFromContext(ctx)
+	if err != nil {
+		r.logger.Error("delete check results by site id: connection not in context", "error", err)
+		return domain.ErrStorage
+	}
+
+	_, err = conn.Exec(ctx, `
+		DELETE FROM check_results
+		WHERE site_id = $1
+	`, siteID)
+	if err != nil {
+		r.logger.Error("delete check results by site id: query failed", "error", err, "site_id", siteID)
+		return domain.ErrStorage
+	}
+
+	return nil
+}
+
 type checkStatusScanner interface {
 	Scan(dest ...any) error
 }

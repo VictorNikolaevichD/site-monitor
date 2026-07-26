@@ -2,6 +2,7 @@ package site
 
 import (
 	"context"
+	"errors"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -9,8 +10,13 @@ import (
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
-type deleteByIDRepository interface {
+type deleteSiteRepository interface {
+	GetByIDForUpdate(ctx context.Context, id uuid.UUID) (domain.Site, error)
 	DeleteByID(ctx context.Context, id uuid.UUID) error
+}
+
+type deleteCheckResultsRepository interface {
+	DeleteBySiteID(ctx context.Context, siteID uuid.UUID) error
 }
 
 type DeleteCommand struct {
@@ -18,30 +24,40 @@ type DeleteCommand struct {
 }
 
 type DeleteUseCase struct {
-	repo deleteByIDRepository
-	pool *pgxpool.Pool
+	sites        deleteSiteRepository
+	checkResults deleteCheckResultsRepository
+	pool         *pgxpool.Pool
 }
 
-func NewDeleteUseCase(repository deleteByIDRepository, pool *pgxpool.Pool) *DeleteUseCase {
+func NewDeleteUseCase(
+	sites deleteSiteRepository,
+	checkResults deleteCheckResultsRepository,
+	pool *pgxpool.Pool,
+) *DeleteUseCase {
 	return &DeleteUseCase{
-		repo: repository,
-		pool: pool,
+		sites:        sites,
+		checkResults: checkResults,
+		pool:         pool,
 	}
 }
 
 func (u *DeleteUseCase) Execute(ctx context.Context, command DeleteCommand) error {
-	tx, err := u.pool.Begin(ctx)
+	err := db.WithinTx(ctx, u.pool, func(ctx context.Context) error {
+		if _, err := u.sites.GetByIDForUpdate(ctx, command.ID); err != nil {
+			return err
+		}
+
+		if err := u.checkResults.DeleteBySiteID(ctx, command.ID); err != nil {
+			return err
+		}
+
+		return u.sites.DeleteByID(ctx, command.ID)
+	})
 	if err != nil {
-		return domain.ErrStorage
-	}
-	defer tx.Rollback(ctx)
-
-	if err := u.repo.DeleteByID(db.WithConn(ctx, tx), command.ID); err != nil {
+		if errors.Is(err, db.ErrTx) {
+			return domain.ErrStorage
+		}
 		return err
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return domain.ErrStorage
 	}
 
 	return nil

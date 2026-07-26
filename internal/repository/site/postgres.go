@@ -117,6 +117,39 @@ func (r *PostgresSiteRepository) DeleteByID(ctx context.Context, id uuid.UUID) e
 	return nil
 }
 
+func (r *PostgresSiteRepository) GetByIDForUpdate(ctx context.Context, id uuid.UUID) (domain.Site, error) {
+	conn, err := db.ConnFromContext(ctx)
+	if err != nil {
+		r.logger.Error("get site by id for update: connection not in context", "error", err)
+		return domain.Site{}, domain.ErrStorage
+	}
+
+	var (
+		url  string
+		name string
+	)
+
+	err = conn.QueryRow(ctx, `
+		SELECT url, name
+		FROM sites
+		WHERE id = $1
+		FOR UPDATE
+	`, id).Scan(&url, &name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return domain.Site{}, domain.ErrSiteNotFound
+		}
+		r.logger.Error("get site by id for update: query failed", "error", err, "site_id", id)
+		return domain.Site{}, domain.ErrStorage
+	}
+
+	return domain.Site{
+		ID:   id,
+		URL:  url,
+		Name: name,
+	}, nil
+}
+
 func (r *PostgresSiteRepository) GetByID(ctx context.Context, id uuid.UUID) (domain.Site, error) {
 	conn, err := db.ConnFromContext(ctx)
 	if err != nil {

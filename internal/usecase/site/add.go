@@ -2,6 +2,7 @@ package site
 
 import (
 	"context"
+	"errors"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
@@ -35,19 +36,14 @@ func (u *AddUseCase) Execute(ctx context.Context, command AddCommand) (domain.Si
 		return domain.Site{}, err
 	}
 
-	tx, err := u.pool.Begin(ctx)
+	created, err := db.WithinTxResult(ctx, u.pool, func(ctx context.Context) (domain.Site, error) {
+		return u.repo.AddIfAbsent(ctx, site)
+	})
 	if err != nil {
-		return domain.Site{}, domain.ErrStorage
-	}
-	defer tx.Rollback(ctx)
-
-	created, err := u.repo.AddIfAbsent(db.WithConn(ctx, tx), site)
-	if err != nil {
+		if errors.Is(err, db.ErrTx) {
+			return domain.Site{}, domain.ErrStorage
+		}
 		return domain.Site{}, err
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return domain.Site{}, domain.ErrStorage
 	}
 
 	return created, nil
