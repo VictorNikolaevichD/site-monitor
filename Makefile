@@ -58,7 +58,7 @@ fmt:
 	go fmt ./...
 
 test:
-	go test ./internal/tests/...
+	go test ./...
 
 # TODO: make lint — запуск линтера (когда будет настроен)
 # lint:
@@ -117,7 +117,7 @@ help:
 	@echo   make deps               - download Go modules
 	@echo   make fmt                - format code
 	@echo   make lint               - TODO: linter
-	@echo   make test               - run tests (internal/tests)
+	@echo   make test               - run tests
 	@echo.
 	@echo Database:
 	@echo   make migrate-up         - apply next migration (one step)

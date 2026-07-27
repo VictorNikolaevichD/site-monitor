@@ -85,7 +85,7 @@ make help
 | `make restart` | перезапуск сервисов |
 | `make deps` | загрузка Go-зависимостей |
 | `make fmt` | форматирование кода |
-| `make test` | запуск тестов из `internal/tests` |
+| `make test` | запуск тестов |
 | `make migrate-up` | накатить следующую миграцию (один шаг) |
 | `make migrate-up-head` | накатить все новые миграции |
 | `make migrate-down` | откатить последнюю миграцию (один шаг) |
