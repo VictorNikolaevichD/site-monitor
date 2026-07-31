@@ -9,7 +9,7 @@
 Из корня проекта:
 
 ```
-go run ./cmd/monitor -config configs/sites.yaml
+go run ./cmd/monitor -config configs/config.yaml
 ```
 
 При таком запуске в информации о сборке будет указана версия `dev`.
@@ -17,9 +17,10 @@ go run ./cmd/monitor -config configs/sites.yaml
 Для запуска с заданной версией:
 
 ```
-go run -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=v1.1.0-beta" ./cmd/monitor -config configs/sites.yaml
+go run -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=v1.1.0-beta" ./cmd/monitor -config configs/config.yaml
 ```
 
+Сайты для мониторинга хранятся в PostgreSQL и добавляются через API (`POST /api/v1/sites`), а не из YAML-конфига.
 ### Сборка
 
 Версия приложения встраивается в бинарный файл через linker flag `-X`:

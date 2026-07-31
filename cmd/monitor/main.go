@@ -129,7 +129,6 @@ func getConfig(logger *slog.Logger) (*config.Config, error) {
 	}
 
 	logger.Info("config parsed",
-		"sites_count", len(cfg.Sites),
 		"interval", cfg.Interval,
 		"http_addr", cfg.HTTPAddr,
 		"log_level", cfg.LogLevel,

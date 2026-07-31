@@ -13,11 +13,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Site struct {
-	URL  string `yaml:"url"`
-	Name string `yaml:"name"`
-}
-
 type Database struct {
 	URL             string        `env:"DATABASE_URL,required,notEmpty"`
 	MaxConns        int32         `yaml:"max_conns" env:"DB_MAX_CONNS"`
@@ -29,7 +24,6 @@ type Database struct {
 }
 
 type Config struct {
-	Sites       []Site        `yaml:"sites"`
 	Interval    time.Duration `yaml:"interval" env:"CHECK_INTERVAL"`
 	HTTPAddr    string        `yaml:"http_addr"`
 	LogLevel    string        `yaml:"log_level" env:"LOG_LEVEL"`

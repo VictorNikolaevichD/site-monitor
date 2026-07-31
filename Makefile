@@ -35,7 +35,7 @@ endif
 .PHONY: run up down restart
 
 run:
-	go run -ldflags "$(LDFLAGS)" ./cmd/monitor -config configs/sites.yaml
+	go run -ldflags "$(LDFLAGS)" ./cmd/monitor -config configs/config.yaml
 
 up:
 	docker compose build --build-arg VERSION=$(VERSION)
