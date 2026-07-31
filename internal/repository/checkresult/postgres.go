@@ -67,7 +67,7 @@ func (r *PostgresCheckResultRepository) GetBySiteID(
 		SELECT id, http_code, duration_ns, availability, error, checked_at
 		FROM check_results
 		WHERE site_id = $1
-		ORDER BY checked_at DESC
+		ORDER BY checked_at DESC, id DESC
 		LIMIT $2 OFFSET $3
 	`, siteID, limit, offset)
 	if err != nil {
@@ -129,7 +129,7 @@ func (r *PostgresCheckResultRepository) GetLatestBySiteID(
 		SELECT http_code, duration_ns, availability, error, checked_at
 		FROM check_results
 		WHERE site_id = $1
-		ORDER BY checked_at DESC
+		ORDER BY checked_at DESC, id DESC
 		LIMIT 1
 	`, siteID)
 
