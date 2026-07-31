@@ -30,7 +30,7 @@ func mapError(err error) ErrorMapping {
 			Status:  http.StatusBadRequest,
 			Message: messageNameRequired,
 		}
-	case errors.Is(err, siteusecase.ErrSiteAlreadyExists):
+	case errors.Is(err, domain.ErrSiteAlreadyExists):
 		return ErrorMapping{
 			Status:  http.StatusConflict,
 			Message: messageSiteAlreadyExists,

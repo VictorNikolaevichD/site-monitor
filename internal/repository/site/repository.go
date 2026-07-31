@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
-	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
 )
 
 type Repository struct {
@@ -43,7 +42,7 @@ func (r *Repository) AddIfAbsent(ctx context.Context, site domain.Site) (domain.
 
 	for _, s := range r.storage {
 		if s.URL == site.URL {
-			return domain.Site{}, siteusecase.ErrSiteAlreadyExists
+			return domain.Site{}, domain.ErrSiteAlreadyExists
 		}
 	}
 

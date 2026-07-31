@@ -10,7 +10,6 @@ import (
 	"github.com/jackc/pgx/v5"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
-	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
 )
 
 type PostgresSiteRepository struct {
@@ -88,7 +87,7 @@ func (r *PostgresSiteRepository) AddIfAbsent(ctx context.Context, site domain.Si
 	}
 
 	if tag.RowsAffected() == 0 {
-		return domain.Site{}, siteusecase.ErrSiteAlreadyExists
+		return domain.Site{}, domain.ErrSiteAlreadyExists
 	}
 
 	return site, nil
