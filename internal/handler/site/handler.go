@@ -224,13 +224,13 @@ func (h *Handler) GetHistoryByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	limit, err := parseOptionalNonNegativeInt(r.URL.Query().Get("limit"), messageInvalidLimit)
+	limit, err := parseOptionalInt(r.URL.Query().Get("limit"), messageInvalidLimit)
 	if err != nil {
 		handler.WriteError(w, http.StatusBadRequest, err.Error())
 		return
 	}
 
-	offset, err := parseOptionalNonNegativeInt(r.URL.Query().Get("offset"), messageInvalidOffset)
+	offset, err := parseOptionalInt(r.URL.Query().Get("offset"), messageInvalidOffset)
 	if err != nil {
 		handler.WriteError(w, http.StatusBadRequest, err.Error())
 		return
@@ -257,13 +257,13 @@ func (h *Handler) GetHistoryByID(w http.ResponseWriter, r *http.Request) {
 	))
 }
 
-func parseOptionalNonNegativeInt(raw, invalidMessage string) (int, error) {
+func parseOptionalInt(raw, invalidMessage string) (int, error) {
 	if raw == "" {
 		return 0, nil
 	}
 
 	value, err := strconv.Atoi(raw)
-	if err != nil || value < 0 {
+	if err != nil {
 		return 0, errors.New(invalidMessage)
 	}
 

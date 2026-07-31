@@ -27,11 +27,14 @@ LABEL org.opencontainers.image.title="site-monitor" \
       org.opencontainers.image.source="https://gitlab.com/Dokuchaevvn/site-monitor" \
       org.opencontainers.image.version="${VERSION}"
 
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates \
+    && adduser -D -H -u 10001 app
 
 WORKDIR /app
 
 COPY --from=builder /build/site-monitor ./site-monitor
+
+USER app
 
 EXPOSE 8080
 

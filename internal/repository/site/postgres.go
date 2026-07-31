@@ -32,6 +32,7 @@ func (r *PostgresSiteRepository) GetAll(ctx context.Context) ([]domain.Site, err
 	rows, err := conn.Query(ctx, `
 		SELECT id, url, name
 		FROM sites
+		WHERE is_active
 		ORDER BY created_at
 	`)
 	if err != nil {
