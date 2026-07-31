@@ -86,6 +86,8 @@ migrate-version:
 db-reset:
 	docker compose down -v
 	docker compose build --build-arg VERSION=$(VERSION)
+	docker compose up -d --wait postgres
+	docker compose run --rm migrate
 	docker compose up -d
 
 # 5. Вспомогательные команды
@@ -109,7 +111,7 @@ help:
 	@echo.
 	@echo Run:
 	@echo   make run                - run app locally
-	@echo   make up                 - start all services
+	@echo   make up                 - start all services (applies migrations)
 	@echo   make down               - stop all services
 	@echo   make restart            - restart services
 	@echo.
@@ -117,15 +119,15 @@ help:
 	@echo   make deps               - download Go modules
 	@echo   make fmt                - format code
 	@echo   make lint               - TODO: linter
-	@echo   make test               - run tests (internal/tests)
+	@echo   make test               - run tests
 	@echo.
 	@echo Database:
-	@echo   make migrate-up         - apply next migration (one step)
-	@echo   make migrate-up-head    - apply all pending migrations
+	@echo   make migrate-up         - apply next migration from host (one step)
+	@echo   make migrate-up-head    - apply all pending migrations from host
 	@echo   make migrate-down       - rollback last migration (one step)
 	@echo   make migrate-down-base  - rollback all migrations to base
 	@echo   make migrate-version    - show current database version
-	@echo   make db-reset           - recreate DB (remove volume)
+	@echo   make db-reset           - recreate DB volume and stack (migrations on up)
 	@echo.
 	@echo Helpers:
 	@echo   make logs               - follow container logs

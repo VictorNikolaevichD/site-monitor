@@ -1,4 +1,17 @@
 services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - monitor-network
+    restart: "no"
+
   site-monitor:
     build:
       context: .
@@ -15,6 +28,8 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - monitor-network
 
