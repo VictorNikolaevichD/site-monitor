@@ -9,7 +9,9 @@ BINARY := site-monitor$(shell go env GOEXE)
 VERSION ?= dev
 LDFLAGS := -X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=$(VERSION)
 MIGRATIONS_DIR := migrations
-GOOSE ?= go tool goose
+GOOSE_VERSION ?= v3.27.2
+GOOSE_TAGS ?= no_clickhouse,no_libsql,no_mssql,no_mysql,no_sqlite3,no_vertica,no_ydb
+GOOSE ?= go run -tags=$(GOOSE_TAGS) github.com/pressly/goose/v3/cmd/goose@$(GOOSE_VERSION)
 MIGRATE_DATABASE_URL ?= postgres://$(DB_USER):$(DB_PASSWORD)@localhost:$(POSTGRES_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
 
 # 1. Команды сборки

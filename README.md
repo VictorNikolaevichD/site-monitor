@@ -112,16 +112,16 @@ make up VERSION=v1.1.0-beta
 
 #### Установка goose
 
-Goose подключён как tool-зависимость в `go.mod`. Используется через:
+Goose не лежит в `go.mod` приложения — запускается через `go run` с build-тегами (только postgres-драйвер):
 
 ```
-go tool goose
+make migrate-version
 ```
 
-При первом клонировании репозитория:
+Эквивалент вручную:
 
 ```
-go mod download
+go run -tags='no_clickhouse,no_libsql,no_mssql,no_mysql,no_sqlite3,no_vertica,no_ydb' github.com/pressly/goose/v3/cmd/goose@v3.27.2 version
 ```
 
 #### Подключение к БД
@@ -196,7 +196,14 @@ make db-reset
 #### Создание новой миграции
 
 ```
-go tool goose -dir migrations create add_example_index sql
+make migrate-up-head
+```
+
+или:
+
+```
+go run -tags='no_clickhouse,no_libsql,no_mssql,no_mysql,no_sqlite3,no_vertica,no_ydb' \
+  github.com/pressly/goose/v3/cmd/goose@v3.27.2 -dir migrations create add_example_index sql
 ```
 
 После этого отредактируйте созданный файл в `migrations/`: секции `-- +goose Up` и `-- +goose Down`.
