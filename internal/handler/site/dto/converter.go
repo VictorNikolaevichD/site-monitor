@@ -38,7 +38,7 @@ func ToStatusResponse(site domain.Site) StatusResponse {
 	response.CheckedAt = &checkedAt
 
 	durationMs := lastCheck.Duration.Milliseconds()
-	response.Duration = &durationMs
+	response.DurationMs = &durationMs
 
 	if lastCheck.Code != 0 {
 		code := lastCheck.Code
@@ -51,4 +51,47 @@ func ToStatusResponse(site domain.Site) StatusResponse {
 	}
 
 	return response
+}
+
+func ToCheckResultResponse(result domain.CheckResult) CheckResultResponse {
+	checkedAt := result.CheckedAt
+	durationMs := result.Duration.Milliseconds()
+
+	response := CheckResultResponse{
+		ID:           result.ID,
+		Availability: result.Availability,
+		CheckedAt:    &checkedAt,
+		DurationMs:   &durationMs,
+	}
+
+	if result.Code != 0 {
+		code := result.Code
+		response.Code = &code
+	}
+
+	if result.Error != "" {
+		errorMessage := result.Error
+		response.Error = &errorMessage
+	}
+
+	return response
+}
+
+func ToCheckHistoryResponse(
+	items []domain.CheckResult,
+	total, limit, offset int,
+) CheckHistoryResponse {
+	result := make([]CheckResultResponse, 0, len(items))
+	for _, item := range items {
+		result = append(result, ToCheckResultResponse(item))
+	}
+
+	return CheckHistoryResponse{
+		Result: result,
+		Pagination: PaginationMeta{
+			Total:  total,
+			Limit:  limit,
+			Offset: offset,
+		},
+	}
 }

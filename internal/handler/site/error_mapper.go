@@ -30,15 +30,30 @@ func mapError(err error) ErrorMapping {
 			Status:  http.StatusBadRequest,
 			Message: messageNameRequired,
 		}
-	case errors.Is(err, siteusecase.ErrSiteAlreadyExists):
+	case errors.Is(err, domain.ErrSiteAlreadyExists):
 		return ErrorMapping{
 			Status:  http.StatusConflict,
 			Message: messageSiteAlreadyExists,
+		}
+	case errors.Is(err, siteusecase.ErrInvalidLimit):
+		return ErrorMapping{
+			Status:  http.StatusBadRequest,
+			Message: messageInvalidLimit,
+		}
+	case errors.Is(err, siteusecase.ErrInvalidOffset):
+		return ErrorMapping{
+			Status:  http.StatusBadRequest,
+			Message: messageInvalidOffset,
 		}
 	case errors.Is(err, domain.ErrSiteNotFound):
 		return ErrorMapping{
 			Status:  http.StatusNotFound,
 			Message: messageSiteIDNotFound,
+		}
+	case errors.Is(err, domain.ErrStorage):
+		return ErrorMapping{
+			Status:  http.StatusInternalServerError,
+			Message: messageInternalError,
 		}
 	default:
 		return ErrorMapping{

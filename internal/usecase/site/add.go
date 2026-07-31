@@ -1,11 +1,17 @@
 package site
 
 import (
+	"context"
+	"errors"
+	"log/slog"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
 type addIfAbsentRepository interface {
-	AddIfAbsent(site domain.Site) (domain.Site, error)
+	AddIfAbsent(ctx context.Context, site domain.Site) (domain.Site, error)
 }
 
 type AddCommand struct {
@@ -14,25 +20,34 @@ type AddCommand struct {
 }
 
 type AddUseCase struct {
-	repo addIfAbsentRepository
+	repo   addIfAbsentRepository
+	pool   *pgxpool.Pool
+	logger *slog.Logger
 }
 
-func NewAddUseCase(repository addIfAbsentRepository) *AddUseCase {
+func NewAddUseCase(repository addIfAbsentRepository, pool *pgxpool.Pool, logger *slog.Logger) *AddUseCase {
 	return &AddUseCase{
-		repo: repository,
+		repo:   repository,
+		pool:   pool,
+		logger: logger,
 	}
 }
 
-func (u *AddUseCase) Execute(command AddCommand) (domain.Site, error) {
+func (u *AddUseCase) Execute(ctx context.Context, command AddCommand) (domain.Site, error) {
 	site, err := domain.NewSite(command.URL, command.Name)
 	if err != nil {
 		return domain.Site{}, err
 	}
 
-	site, err = u.repo.AddIfAbsent(site)
+	created, err := db.WithinTxResult(ctx, u.pool, u.logger, func(ctx context.Context) (domain.Site, error) {
+		return u.repo.AddIfAbsent(ctx, site)
+	})
 	if err != nil {
+		if errors.Is(err, db.ErrTx) {
+			return domain.Site{}, domain.ErrStorage
+		}
 		return domain.Site{}, err
 	}
 
-	return site, nil
+	return created, nil
 }

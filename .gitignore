@@ -20,7 +20,7 @@ coverage.*
 # Локальные конфиги
 .env
 .env.*
-config.local.yaml
+!.env.example
 
 # IDE
 .idea/

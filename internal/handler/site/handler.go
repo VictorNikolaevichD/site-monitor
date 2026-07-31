@@ -1,8 +1,11 @@
 package site
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/google/uuid"
 
@@ -13,26 +16,31 @@ import (
 )
 
 type getAllUseCase interface {
-	Execute() []domain.Site
+	Execute(ctx context.Context) ([]domain.Site, error)
 }
 
 type addUseCase interface {
-	Execute(command siteusecase.AddCommand) (domain.Site, error)
+	Execute(ctx context.Context, command siteusecase.AddCommand) (domain.Site, error)
 }
 
 type deleteByIDUseCase interface {
-	Execute(command siteusecase.DeleteCommand) error
+	Execute(ctx context.Context, command siteusecase.DeleteCommand) error
 }
 
 type getStatusByIDUseCase interface {
-	Execute(command siteusecase.GetStatusCommand) (domain.Site, error)
+	Execute(ctx context.Context, command siteusecase.GetStatusCommand) (domain.Site, error)
+}
+
+type getHistoryByIDUseCase interface {
+	Execute(ctx context.Context, command siteusecase.GetHistoryCommand) (siteusecase.GetHistoryResult, error)
 }
 
 type Handler struct {
-	getAllUseCase    getAllUseCase
-	addUseCase       addUseCase
-	deleteUseCase    deleteByIDUseCase
-	getStatusUseCase getStatusByIDUseCase
+	getAllUseCase     getAllUseCase
+	addUseCase        addUseCase
+	deleteUseCase     deleteByIDUseCase
+	getStatusUseCase  getStatusByIDUseCase
+	getHistoryUseCase getHistoryByIDUseCase
 }
 
 func NewHandler(
@@ -40,12 +48,14 @@ func NewHandler(
 	addUseCase addUseCase,
 	deleteUseCase deleteByIDUseCase,
 	getStatusUseCase getStatusByIDUseCase,
+	getHistoryUseCase getHistoryByIDUseCase,
 ) *Handler {
 	return &Handler{
-		getAllUseCase:    getAllUseCase,
-		addUseCase:       addUseCase,
-		deleteUseCase:    deleteUseCase,
-		getStatusUseCase: getStatusUseCase,
+		getAllUseCase:     getAllUseCase,
+		addUseCase:        addUseCase,
+		deleteUseCase:     deleteUseCase,
+		getStatusUseCase:  getStatusUseCase,
+		getHistoryUseCase: getHistoryUseCase,
 	}
 }
 
@@ -56,10 +66,17 @@ func NewHandler(
 // @Produce json
 // @Param X-Request-ID header string false "Идентификатор запроса для трассировки"
 // @Success 200 {array} dto.SiteResponse
+// @Failure 500 {object} handler.ErrorResponse "Внутренняя ошибка сервера"
 // @Header 200 {string} X-Request-ID "Идентификатор запроса"
+// @Header 500 {string} X-Request-ID "Идентификатор запроса"
 // @Router /sites [get]
-func (h *Handler) GetAll(w http.ResponseWriter, _ *http.Request) {
-	sites := h.getAllUseCase.Execute()
+func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
+	sites, err := h.getAllUseCase.Execute(r.Context())
+	if err != nil {
+		mappedError := mapError(err)
+		handler.WriteError(w, mappedError.Status, mappedError.Message)
+		return
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_ = json.NewEncoder(w).Encode(dto.ToSiteResponses(sites))
@@ -93,7 +110,7 @@ func (h *Handler) Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	site, err := h.addUseCase.Execute(siteusecase.AddCommand{
+	site, err := h.addUseCase.Execute(r.Context(), siteusecase.AddCommand{
 		URL:  request.URL,
 		Name: request.Name,
 	})
@@ -132,7 +149,7 @@ func (h *Handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.deleteUseCase.Execute(siteusecase.DeleteCommand{
+	err = h.deleteUseCase.Execute(r.Context(), siteusecase.DeleteCommand{
 		ID: id,
 	})
 	if err != nil {
@@ -168,7 +185,7 @@ func (h *Handler) GetStatusByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	site, err := h.getStatusUseCase.Execute(siteusecase.GetStatusCommand{
+	site, err := h.getStatusUseCase.Execute(r.Context(), siteusecase.GetStatusCommand{
 		ID: id,
 	})
 	if err != nil {
@@ -180,4 +197,75 @@ func (h *Handler) GetStatusByID(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	_ = json.NewEncoder(w).Encode(dto.ToStatusResponse(site))
+}
+
+// GetHistoryByID godoc
+// @Summary Получить историю проверок сайта
+// @Description Возвращает пагинированную историю проверок сайта по UUID
+// @Tags sites
+// @Produce json
+// @Param X-Request-ID header string false "Идентификатор запроса для трассировки"
+// @Param id path string true "UUID сайта" Format(uuid)
+// @Param limit query int false "Размер страницы (по умолчанию 20, максимум 100)"
+// @Param offset query int false "Смещение (по умолчанию 0)"
+// @Success 200 {object} dto.CheckHistoryResponse
+// @Failure 400 {object} handler.ErrorResponse "Некорректный UUID сайта или параметры пагинации"
+// @Failure 404 {object} handler.ErrorResponse "Сайт не найден"
+// @Failure 500 {object} handler.ErrorResponse "Внутренняя ошибка сервера"
+// @Header 200 {string} X-Request-ID "Идентификатор запроса"
+// @Header 400 {string} X-Request-ID "Идентификатор запроса"
+// @Header 404 {string} X-Request-ID "Идентификатор запроса"
+// @Header 500 {string} X-Request-ID "Идентификатор запроса"
+// @Router /sites/{id}/history [get]
+func (h *Handler) GetHistoryByID(w http.ResponseWriter, r *http.Request) {
+	id, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		handler.WriteError(w, http.StatusBadRequest, messageInvalidSiteID)
+		return
+	}
+
+	limit, err := parseOptionalInt(r.URL.Query().Get("limit"), messageInvalidLimit)
+	if err != nil {
+		handler.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	offset, err := parseOptionalInt(r.URL.Query().Get("offset"), messageInvalidOffset)
+	if err != nil {
+		handler.WriteError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+
+	result, err := h.getHistoryUseCase.Execute(r.Context(), siteusecase.GetHistoryCommand{
+		SiteID: id,
+		Limit:  limit,
+		Offset: offset,
+	})
+	if err != nil {
+		mappedError := mapError(err)
+		handler.WriteError(w, mappedError.Status, mappedError.Message)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(dto.ToCheckHistoryResponse(
+		result.Items,
+		result.Total,
+		result.Limit,
+		result.Offset,
+	))
+}
+
+func parseOptionalInt(raw, invalidMessage string) (int, error) {
+	if raw == "" {
+		return 0, nil
+	}
+
+	value, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, errors.New(invalidMessage)
+	}
+
+	return value, nil
 }

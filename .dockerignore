@@ -1,0 +1,27 @@
+# Git / IDE / OS
+.git/
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Документация и локальные артефакты
+*.md
+.gitignore
+.env
+.env.*
+
+# Конфиги (монтируются при запуске)
+configs/
+config/
+
+# Бинарники и артефакты сборки
+*.exe
+*.test
+*.out
+coverage.*
+/bin/
+/build/
+/dist/
+Dockerfile
+.dockerignore

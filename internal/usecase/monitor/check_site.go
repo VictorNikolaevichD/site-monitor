@@ -1,17 +1,23 @@
 package monitor
 
 import (
+	"context"
 	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
 	checker "gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
 type siteRepository interface {
-	GetAll() []domain.Site
-	UpdateLastCheckByID(id uuid.UUID, checkStatus domain.CheckStatus) (domain.Site, error)
+	GetAll(ctx context.Context) ([]domain.Site, error)
+}
+
+type checkResultRepository interface {
+	Create(ctx context.Context, siteID uuid.UUID, result domain.CheckStatus) error
 }
 
 type siteChecker interface {
@@ -19,61 +25,61 @@ type siteChecker interface {
 }
 
 type CheckSiteUseCase struct {
-	repo        siteRepository
-	siteChecker siteChecker
-	logger      *slog.Logger
+	repo         siteRepository
+	checkResults checkResultRepository
+	siteChecker  siteChecker
+	pool         *pgxpool.Pool
+	logger       *slog.Logger
 }
 
-func NewCheckSiteUseCase(repository siteRepository, checker siteChecker, logger *slog.Logger) *CheckSiteUseCase {
+func NewCheckSiteUseCase(
+	repository siteRepository,
+	checkResults checkResultRepository,
+	checker siteChecker,
+	pool *pgxpool.Pool,
+	logger *slog.Logger,
+) *CheckSiteUseCase {
 	return &CheckSiteUseCase{
-		repo:        repository,
-		siteChecker: checker,
-		logger:      logger,
+		repo:         repository,
+		checkResults: checkResults,
+		siteChecker:  checker,
+		pool:         pool,
+		logger:       logger,
 	}
 }
 
-func (u *CheckSiteUseCase) Execute() {
-	sites := u.repo.GetAll()
+func (u *CheckSiteUseCase) Execute(ctx context.Context) {
+	ctx = db.WithConn(ctx, u.pool)
 
-	var result checker.Result
+	sites, err := u.repo.GetAll(ctx)
+	if err != nil {
+		u.logger.Error("failed to get sites", "error", err)
+		return
+	}
+
 	for _, v := range sites {
-		result = u.siteChecker.Check(v.URL)
+		result := u.siteChecker.Check(v.URL)
+		status := domain.CheckStatus{
+			Code:      result.Code,
+			CheckedAt: time.Now().UTC(),
+			Duration:  result.Duration,
+		}
 
-		if result.Error != nil {
+		switch {
+		case result.Error != nil:
 			u.logger.Error("site check failed", "status", "NOT ok", "url", v.URL, "error", result.Error)
-			if _, err := u.repo.UpdateLastCheckByID(v.ID, domain.CheckStatus{
-				Availability: domain.Unavailable,
-				Code:         result.Code,
-				CheckedAt:    time.Now(),
-				Duration:     result.Duration,
-				Error:        result.Error.Error(),
-			}); err != nil {
-				u.logger.Error("failed to update last check", "site_id", v.ID, "error", err)
-			}
-			continue
-		}
-
-		if !result.AvailabilityStatus {
+			status.Availability = domain.Unavailable
+			status.Error = result.Error.Error()
+		case !result.AvailabilityStatus:
 			u.logger.Warn("site unavailable", "status", "NOT ok", "code", result.Code, "url", v.URL)
-			if _, err := u.repo.UpdateLastCheckByID(v.ID, domain.CheckStatus{
-				Availability: domain.Unavailable,
-				Code:         result.Code,
-				CheckedAt:    time.Now(),
-				Duration:     result.Duration,
-			}); err != nil {
-				u.logger.Error("failed to update last check", "site_id", v.ID, "error", err)
-			}
-			continue
+			status.Availability = domain.Unavailable
+		default:
+			u.logger.Info("site available", "status", "ok", "code", result.Code, "url", v.URL)
+			status.Availability = domain.Available
 		}
 
-		u.logger.Info("site available", "status", "ok", "code", result.Code, "url", v.URL)
-		if _, err := u.repo.UpdateLastCheckByID(v.ID, domain.CheckStatus{
-			Availability: domain.Available,
-			Code:         result.Code,
-			CheckedAt:    time.Now(),
-			Duration:     result.Duration,
-		}); err != nil {
-			u.logger.Error("failed to update last check", "site_id", v.ID, "error", err)
+		if err := u.checkResults.Create(ctx, v.ID, status); err != nil {
+			u.logger.Error("failed to save check result", "site_id", v.ID, "error", err)
 		}
 	}
 }

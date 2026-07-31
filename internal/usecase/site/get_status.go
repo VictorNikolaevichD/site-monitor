@@ -1,12 +1,21 @@
 package site
 
 import (
+	"context"
+	"errors"
+
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
 type getByIDRepository interface {
-	GetByID(id uuid.UUID) (domain.Site, error)
+	GetByID(ctx context.Context, id uuid.UUID) (domain.Site, error)
+}
+
+type latestCheckRepository interface {
+	GetLatestBySiteID(ctx context.Context, siteID uuid.UUID) (domain.CheckStatus, error)
 }
 
 type GetStatusCommand struct {
@@ -14,20 +23,39 @@ type GetStatusCommand struct {
 }
 
 type GetStatusUseCase struct {
-	repo getByIDRepository
+	sites        getByIDRepository
+	checkResults latestCheckRepository
+	pool         *pgxpool.Pool
 }
 
-func NewGetStatusUseCase(repository getByIDRepository) *GetStatusUseCase {
+func NewGetStatusUseCase(
+	sites getByIDRepository,
+	checkResults latestCheckRepository,
+	pool *pgxpool.Pool,
+) *GetStatusUseCase {
 	return &GetStatusUseCase{
-		repo: repository,
+		sites:        sites,
+		checkResults: checkResults,
+		pool:         pool,
 	}
 }
 
-func (u *GetStatusUseCase) Execute(command GetStatusCommand) (domain.Site, error) {
-	site, err := u.repo.GetByID(command.ID)
+func (u *GetStatusUseCase) Execute(ctx context.Context, command GetStatusCommand) (domain.Site, error) {
+	ctx = db.WithConn(ctx, u.pool)
+
+	site, err := u.sites.GetByID(ctx, command.ID)
 	if err != nil {
 		return domain.Site{}, err
 	}
 
+	latest, err := u.checkResults.GetLatestBySiteID(ctx, command.ID)
+	if err != nil {
+		if errors.Is(err, domain.ErrCheckResultNotFound) {
+			return site, nil
+		}
+		return domain.Site{}, err
+	}
+
+	site.LastCheck = &latest
 	return site, nil
 }

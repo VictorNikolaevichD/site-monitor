@@ -1,12 +1,13 @@
 package scheduler
 
 import (
+	"context"
 	"log/slog"
 	"time"
 )
 
 type checkSitesUseCase interface {
-	Execute()
+	Execute(ctx context.Context)
 }
 
 type Scheduler struct {
@@ -53,11 +54,11 @@ func (s *Scheduler) schedule() {
 	defer ticker.Stop()
 	defer close(s.done)
 
-	s.checkSitesUseCase.Execute()
+	s.checkSitesUseCase.Execute(context.Background())
 	for {
 		select {
 		case <-ticker.C:
-			s.checkSitesUseCase.Execute()
+			s.checkSitesUseCase.Execute(context.Background())
 		case <-s.stop:
 			return
 		}

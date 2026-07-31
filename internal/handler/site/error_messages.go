@@ -9,4 +9,6 @@ const (
 	messageInternalError     = "внутренняя ошибка сервера"
 	messageInvalidSiteID     = "некорректный ID сайта"
 	messageSiteIDNotFound    = "сайт с указанным ID не найден"
+	messageInvalidLimit      = "некорректный параметр limit"
+	messageInvalidOffset     = "некорректный параметр offset"
 )

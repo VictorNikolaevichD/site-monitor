@@ -5,5 +5,6 @@ import (
 )
 
 var (
-	ErrSiteAlreadyExists = errors.New("сайт с таким URL уже существует")
+	ErrInvalidLimit  = errors.New("invalid limit")
+	ErrInvalidOffset = errors.New("invalid offset")
 )

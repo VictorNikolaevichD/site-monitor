@@ -1,0 +1,43 @@
+# Этап 1: сборка приложения
+FROM golang:1.26-alpine AS builder
+
+ARG VERSION=dev
+
+WORKDIR /app
+
+COPY go.mod go.sum ./
+
+RUN go mod download
+
+COPY . .
+
+RUN CGO_ENABLED=0 GOOS=linux go build \
+    -trimpath \
+    -ldflags="-s -w -X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=${VERSION}" \
+    -o /build/site-monitor \
+    ./cmd/monitor
+
+# Этап 2: запуск приложения
+FROM alpine:3.22 AS runtime
+
+ARG VERSION=dev
+
+LABEL org.opencontainers.image.title="site-monitor" \
+      org.opencontainers.image.description="HTTP service for site availability monitoring" \
+      org.opencontainers.image.source="https://gitlab.com/Dokuchaevvn/site-monitor" \
+      org.opencontainers.image.version="${VERSION}"
+
+RUN apk add --no-cache ca-certificates \
+    && adduser -D -H -u 10001 app
+
+WORKDIR /app
+
+COPY --from=builder /build/site-monitor ./site-monitor
+
+USER app
+
+EXPOSE 8080
+
+ENTRYPOINT ["./site-monitor"]
+
+CMD ["-config", "/configs/config.yaml"]

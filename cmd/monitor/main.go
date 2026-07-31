@@ -14,7 +14,7 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
 	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/health"
 	pinghandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping"
@@ -22,6 +22,7 @@ import (
 	swaggerhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/swagger"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/health"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/middleware"
+	checkresultrepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/checkresult"
 	siterepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/scheduler"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/server"
@@ -40,27 +41,52 @@ import (
 func main() {
 	startedAt := time.Now()
 
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
-	logger.Info("site monitor started.")
+	bootstrapLogger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	bootstrapLogger.Info("site monitor started.")
 
-	cfg, err := getConfig(logger)
+	cfg, err := getConfig(bootstrapLogger)
 	if err != nil {
 		return
 	}
 
+	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+		Level: cfg.SlogLevel(),
+	}))
+
+	dbConn, err := db.OpenPostgres(context.Background(), cfg.Database)
+	if err != nil {
+		logger.Error("failed to connect to postgres", "error", err)
+		return
+	}
+	defer dbConn.Close()
+	logger.Info("postgres connected")
+
 	swaggerHandler := swaggerhandler.NewHandler()
 
-	sites := toDomainSites(cfg.Sites, logger)
-	siteRepository := siterepo.NewRepository(sites)
-	siteGetAllUseCase := siteusecase.NewGetAllUseCase(siteRepository)
-	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository)
-	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository)
-	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository)
-	siteHandler := sitehandler.NewHandler(siteGetAllUseCase, siteAddUseCase, siteDeleteUseCase, siteGetStatusUseCase)
-	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(siteRepository, checker.NewChecker(), logger)
+	siteRepository := siterepo.NewPostgresSiteRepository(logger)
+	checkResultRepository := checkresultrepo.NewPostgresCheckResultRepository(logger)
+	siteGetAllUseCase := siteusecase.NewGetAllUseCase(siteRepository, dbConn)
+	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository, dbConn, logger)
+	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository, checkResultRepository, dbConn, logger)
+	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository, checkResultRepository, dbConn)
+	siteGetHistoryUseCase := siteusecase.NewGetHistoryUseCase(siteRepository, checkResultRepository, dbConn, logger)
+	siteHandler := sitehandler.NewHandler(
+		siteGetAllUseCase,
+		siteAddUseCase,
+		siteDeleteUseCase,
+		siteGetStatusUseCase,
+		siteGetHistoryUseCase,
+	)
+	checkSiteUseCase := monitorusecase.NewCheckSiteUseCase(
+		siteRepository,
+		checkResultRepository,
+		checker.NewChecker(cfg.HTTPTimeout),
+		dbConn,
+		logger,
+	)
 
 	pingHandler := pinghandler.NewHandler()
-	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt)
+	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt, db.NewPostgresChecker(dbConn))
 	healthHandler := healthhandler.NewHandler(healthChecker)
 
 	signals := make(chan os.Signal, 1)
@@ -102,7 +128,12 @@ func getConfig(logger *slog.Logger) (*config.Config, error) {
 		return nil, err
 	}
 
-	logger.Info("config parsed", "sites_count", len(cfg.Sites), "interval", cfg.Interval)
+	logger.Info("config parsed",
+		"interval", cfg.Interval,
+		"http_addr", cfg.HTTPAddr,
+		"log_level", cfg.LogLevel,
+		"http_timeout", cfg.HTTPTimeout,
+	)
 	return cfg, nil
 }
 
@@ -110,19 +141,4 @@ func runServer(server *http.Server, cfg *config.Config, logger *slog.Logger) {
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Error("failed to start http server", "http_addr", cfg.HTTPAddr)
 	}
-}
-
-func toDomainSites(cfgSites []config.Site, logger *slog.Logger) []domain.Site {
-	sites := make([]domain.Site, 0, len(cfgSites))
-
-	for _, cfgS := range cfgSites {
-		site, err := domain.NewSite(cfgS.URL, cfgS.Name)
-		if err != nil {
-			logger.Error("failed to create site", "error", err, "url", cfgS.URL, "name", cfgS.Name)
-			continue
-		}
-		sites = append(sites, site)
-	}
-
-	return sites
 }
