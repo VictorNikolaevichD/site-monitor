@@ -19,17 +19,17 @@ type StatusResponse struct {
 	Availability site.Availability `json:"availability" example:"available"`
 	Code         *int              `json:"code,omitempty" example:"200"`
 	CheckedAt    *time.Time        `json:"checked_at,omitempty" example:"2026-07-15T10:00:00Z"`
-	Duration     *int64            `json:"duration,omitempty" example:"245"`
+	DurationMs   *int64            `json:"duration_ms,omitempty" example:"245"`
 	Error        *string           `json:"error,omitempty" example:"context deadline exceeded"`
 }
 
 type CheckResultResponse struct {
 	ID           int64             `json:"id" example:"1"`
 	Availability site.Availability `json:"availability" example:"available"`
-	Code         int               `json:"code" example:"200"`
-	Duration     int64             `json:"duration" example:"245"`
-	Error        string            `json:"error" example:""`
-	CheckedAt    time.Time         `json:"checked_at" example:"2026-07-15T10:00:00Z"`
+	Code         *int              `json:"code,omitempty" example:"200"`
+	CheckedAt    *time.Time        `json:"checked_at,omitempty" example:"2026-07-15T10:00:00Z"`
+	DurationMs   *int64            `json:"duration_ms,omitempty" example:"245"`
+	Error        *string           `json:"error,omitempty" example:"context deadline exceeded"`
 }
 
 type PaginationMeta struct {

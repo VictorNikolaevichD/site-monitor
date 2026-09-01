@@ -1,4 +1,17 @@
 services:
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrate
+    env_file:
+      - .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - monitor-network
+    restart: "no"
+
   site-monitor:
     build:
       context: .
@@ -8,13 +21,15 @@ services:
     env_file:
       - .env
     volumes:
-      - "./configs/sites.yaml:/configs/sites.yaml:ro"
+      - "./configs/config.yaml:/configs/config.yaml:ro"
     restart: unless-stopped
     ports:
       - "${APP_PORT}:${APP_PORT}"
     depends_on:
       postgres:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
     networks:
       - monitor-network
 

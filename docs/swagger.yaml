@@ -32,11 +32,11 @@ definitions:
       code:
         example: 200
         type: integer
-      duration:
+      duration_ms:
         example: 245
         type: integer
       error:
-        example: ""
+        example: context deadline exceeded
         type: string
       id:
         example: 1
@@ -100,7 +100,7 @@ definitions:
       code:
         example: 200
         type: integer
-      duration:
+      duration_ms:
         example: 245
         type: integer
       error:

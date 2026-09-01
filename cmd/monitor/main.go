@@ -69,7 +69,7 @@ func main() {
 	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository, dbConn, logger)
 	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository, checkResultRepository, dbConn, logger)
 	siteGetStatusUseCase := siteusecase.NewGetStatusUseCase(siteRepository, checkResultRepository, dbConn)
-	siteGetHistoryUseCase := siteusecase.NewGetHistoryUseCase(siteRepository, checkResultRepository, dbConn)
+	siteGetHistoryUseCase := siteusecase.NewGetHistoryUseCase(siteRepository, checkResultRepository, dbConn, logger)
 	siteHandler := sitehandler.NewHandler(
 		siteGetAllUseCase,
 		siteAddUseCase,
@@ -129,7 +129,6 @@ func getConfig(logger *slog.Logger) (*config.Config, error) {
 	}
 
 	logger.Info("config parsed",
-		"sites_count", len(cfg.Sites),
 		"interval", cfg.Interval,
 		"http_addr", cfg.HTTPAddr,
 		"log_level", cfg.LogLevel,

@@ -9,7 +9,9 @@ BINARY := site-monitor$(shell go env GOEXE)
 VERSION ?= dev
 LDFLAGS := -X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=$(VERSION)
 MIGRATIONS_DIR := migrations
-GOOSE ?= go tool goose
+GOOSE_VERSION ?= v3.27.2
+GOOSE_TAGS ?= no_clickhouse,no_libsql,no_mssql,no_mysql,no_sqlite3,no_vertica,no_ydb
+GOOSE ?= go run -tags=$(GOOSE_TAGS) github.com/pressly/goose/v3/cmd/goose@$(GOOSE_VERSION)
 MIGRATE_DATABASE_URL ?= postgres://$(DB_USER):$(DB_PASSWORD)@localhost:$(POSTGRES_PORT)/$(DB_NAME)?sslmode=$(DB_SSLMODE)
 
 # 1. Команды сборки
@@ -35,7 +37,7 @@ endif
 .PHONY: run up down restart
 
 run:
-	go run -ldflags "$(LDFLAGS)" ./cmd/monitor -config configs/sites.yaml
+	go run -ldflags "$(LDFLAGS)" ./cmd/monitor -config configs/config.yaml
 
 up:
 	docker compose build --build-arg VERSION=$(VERSION)
@@ -86,6 +88,8 @@ migrate-version:
 db-reset:
 	docker compose down -v
 	docker compose build --build-arg VERSION=$(VERSION)
+	docker compose up -d --wait postgres
+	docker compose run --rm migrate
 	docker compose up -d
 
 # 5. Вспомогательные команды
@@ -109,7 +113,7 @@ help:
 	@echo.
 	@echo Run:
 	@echo   make run                - run app locally
-	@echo   make up                 - start all services
+	@echo   make up                 - start all services (applies migrations)
 	@echo   make down               - stop all services
 	@echo   make restart            - restart services
 	@echo.
@@ -120,12 +124,12 @@ help:
 	@echo   make test               - run tests
 	@echo.
 	@echo Database:
-	@echo   make migrate-up         - apply next migration (one step)
-	@echo   make migrate-up-head    - apply all pending migrations
+	@echo   make migrate-up         - apply next migration from host (one step)
+	@echo   make migrate-up-head    - apply all pending migrations from host
 	@echo   make migrate-down       - rollback last migration (one step)
 	@echo   make migrate-down-base  - rollback all migrations to base
 	@echo   make migrate-version    - show current database version
-	@echo   make db-reset           - recreate DB (remove volume)
+	@echo   make db-reset           - recreate DB volume and stack (migrations on up)
 	@echo.
 	@echo Helpers:
 	@echo   make logs               - follow container logs

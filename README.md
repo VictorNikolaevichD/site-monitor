@@ -9,7 +9,7 @@
 Из корня проекта:
 
 ```
-go run ./cmd/monitor -config configs/sites.yaml
+go run ./cmd/monitor -config configs/config.yaml
 ```
 
 При таком запуске в информации о сборке будет указана версия `dev`.
@@ -17,9 +17,10 @@ go run ./cmd/monitor -config configs/sites.yaml
 Для запуска с заданной версией:
 
 ```
-go run -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=v1.1.0-beta" ./cmd/monitor -config configs/sites.yaml
+go run -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=v1.1.0-beta" ./cmd/monitor -config configs/config.yaml
 ```
 
+Сайты для мониторинга хранятся в PostgreSQL и добавляются через API (`POST /api/v1/sites`), а не из YAML-конфига.
 ### Сборка
 
 Версия приложения встраивается в бинарный файл через linker flag `-X`:
@@ -33,6 +34,8 @@ go build -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Ver
 ```
 docker compose up --build
 ```
+
+При старте сервис `migrate` применяет SQL-миграции, затем поднимается `site-monitor`.
 
 Остановка:
 
@@ -80,7 +83,7 @@ make help
 | `make docker-build` | сборка образов через Docker Compose |
 | `make clean` | очистка артефактов сборки |
 | `make run` | локальный запуск приложения |
-| `make up` | запуск всех сервисов |
+| `make up` | запуск всех сервисов (миграции применяются автоматически) |
 | `make down` | остановка сервисов |
 | `make restart` | перезапуск сервисов |
 | `make deps` | загрузка Go-зависимостей |
@@ -109,16 +112,16 @@ make up VERSION=v1.1.0-beta
 
 #### Установка goose
 
-Goose подключён как tool-зависимость в `go.mod`. Используется через:
+Goose не лежит в `go.mod` приложения — запускается через `go run` с build-тегами (только postgres-драйвер):
 
 ```
-go tool goose
+make migrate-version
 ```
 
-При первом клонировании репозитория:
+Эквивалент вручную:
 
 ```
-go mod download
+go run -tags='no_clickhouse,no_libsql,no_mssql,no_mysql,no_sqlite3,no_vertica,no_ydb' github.com/pressly/goose/v3/cmd/goose@v3.27.2 version
 ```
 
 #### Подключение к БД
@@ -169,35 +172,38 @@ make migrate-version
 
 #### Типовой сценарий
 
-1. Поднять PostgreSQL:
+1. Поднять стек (PostgreSQL + миграции + приложение):
 
 ```
 make up
 ```
 
-2. Накатить миграции:
+Сервис `migrate` накатывает миграции автоматически до старта `site-monitor`.
 
-```
-make migrate-up-head
-```
-
-3. Проверить версию БД:
+2. Проверить версию БД (с хоста):
 
 ```
 make migrate-version
 ```
 
-4. Полностью пересоздать БД (удалит данные):
+3. Полностью пересоздать БД (удалит данные; миграции накатятся в `db-reset`):
 
 ```
 make db-reset
-make migrate-up-head
 ```
 
+Команды `make migrate-*` нужны для ручного управления схемой с хоста (локальная разработка без пересоздания контейнеров).
 #### Создание новой миграции
 
 ```
-go tool goose -dir migrations create add_example_index sql
+make migrate-up-head
+```
+
+или:
+
+```
+go run -tags='no_clickhouse,no_libsql,no_mssql,no_mysql,no_sqlite3,no_vertica,no_ydb' \
+  github.com/pressly/goose/v3/cmd/goose@v3.27.2 -dir migrations create add_example_index sql
 ```
 
 После этого отредактируйте созданный файл в `migrations/`: секции `-- +goose Up` и `-- +goose Down`.

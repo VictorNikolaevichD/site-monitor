@@ -521,13 +521,13 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 200
                 },
-                "duration": {
+                "duration_ms": {
                     "type": "integer",
                     "example": 245
                 },
                 "error": {
                     "type": "string",
-                    "example": ""
+                    "example": "context deadline exceeded"
                 },
                 "id": {
                     "type": "integer",
@@ -622,7 +622,7 @@ const docTemplate = `{
                     "type": "integer",
                     "example": 200
                 },
-                "duration": {
+                "duration_ms": {
                     "type": "integer",
                     "example": 245
                 },
