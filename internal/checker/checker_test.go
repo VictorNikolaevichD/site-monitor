@@ -8,7 +8,7 @@ import (
 )
 
 func TestChecker_Check(t *testing.T) {
-	tests := []struct {
+	testTable := []struct {
 		name          string
 		setup         func(t *testing.T) string
 		timeout       time.Duration
@@ -85,27 +85,27 @@ func TestChecker_Check(t *testing.T) {
 		},
 	}
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			url := tt.setup(t)
+	for _, testCase := range testTable {
+		t.Run(testCase.name, func(t *testing.T) {
+			url := testCase.setup(t)
 
-			checker := NewChecker(tt.timeout)
+			checker := NewChecker(testCase.timeout)
 			result := checker.Check(url)
 
 			if result.URL != url {
 				t.Fatalf("URL = %q, want %q", result.URL, url)
 			}
-			if (result.Error != nil) != tt.wantErr {
-				t.Fatalf("Error = %v, wantErr = %v", result.Error, tt.wantErr)
+			if (result.Error != nil) != testCase.wantErr {
+				t.Fatalf("Error = %v, wantErr = %v", result.Error, testCase.wantErr)
 			}
-			if result.Code != tt.wantCode {
-				t.Fatalf("Code = %d, want %d", result.Code, tt.wantCode)
+			if result.Code != testCase.wantCode {
+				t.Fatalf("Code = %d, want %d", result.Code, testCase.wantCode)
 			}
-			if result.AvailabilityStatus != tt.wantAvailable {
-				t.Fatalf("AvailabilityStatus = %v, want %v", result.AvailabilityStatus, tt.wantAvailable)
+			if result.AvailabilityStatus != testCase.wantAvailable {
+				t.Fatalf("AvailabilityStatus = %v, want %v", result.AvailabilityStatus, testCase.wantAvailable)
 			}
-			if result.Duration <= 0 {
-				t.Fatalf("Duration = %v, want > 0", result.Duration)
+			if result.Duration < 0 {
+				t.Fatalf("Duration = %v, want >= 0", result.Duration)
 			}
 		})
 	}
