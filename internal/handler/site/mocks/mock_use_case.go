@@ -100,6 +100,10 @@ func NewMockDeleteByIDUseCase(ctrl *Controller) MockDeleteByIDUseCase {
 	}
 }
 
+func (m *MockDeleteByIDUseCase) CallCount(funcName string) int {
+	return m.ctrl.GetCallCount(funcName)
+}
+
 func (m *MockDeleteByIDUseCase) Execute(ctx context.Context, command siteusecase.DeleteCommand) error {
 	res := m.ctrl.Call("Execute")
 
@@ -116,6 +120,10 @@ func NewMockGetStatusByIDUseCase(ctrl *Controller) MockGetStatusByIDUseCase {
 	return MockGetStatusByIDUseCase{
 		ctrl: ctrl,
 	}
+}
+
+func (m *MockGetStatusByIDUseCase) CallCount(funcName string) int {
+	return m.ctrl.GetCallCount(funcName)
 }
 
 func (m *MockGetStatusByIDUseCase) Execute(ctx context.Context, command siteusecase.GetStatusCommand) (domain.Site, error) {
