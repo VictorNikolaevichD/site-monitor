@@ -1,0 +1,25 @@
+stages:
+  - test
+
+default:
+  image: golang:1.26
+  interruptible: true
+
+variables:
+  CGO_ENABLED: "0"
+  GOPATH: $CI_PROJECT_DIR/.go
+  GOCACHE: $CI_PROJECT_DIR/.gocache
+  GOMODCACHE: $CI_PROJECT_DIR/.go/pkg/mod
+
+cache:
+  key:
+    files:
+      - go.sum
+  paths:
+    - .go/pkg/mod
+    - .gocache
+
+test:
+  stage: test
+  script:
+    - go test ./...
