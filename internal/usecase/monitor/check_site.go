@@ -10,6 +10,7 @@ import (
 	checker "gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/messaging"
 )
 
 type siteRepository interface {
@@ -20,6 +21,10 @@ type checkResultRepository interface {
 	Create(ctx context.Context, siteID uuid.UUID, result domain.CheckStatus) error
 }
 
+type eventPublisher interface {
+	Publish(ctx context.Context, event messaging.SiteCheckEvent) error
+}
+
 type siteChecker interface {
 	Check(url string) checker.Result
 }
@@ -28,6 +33,7 @@ type CheckSiteUseCase struct {
 	repo         siteRepository
 	checkResults checkResultRepository
 	siteChecker  siteChecker
+	publisher    eventPublisher
 	pool         *pgxpool.Pool
 	logger       *slog.Logger
 }
@@ -36,6 +42,7 @@ func NewCheckSiteUseCase(
 	repository siteRepository,
 	checkResults checkResultRepository,
 	checker siteChecker,
+	publisher eventPublisher,
 	pool *pgxpool.Pool,
 	logger *slog.Logger,
 ) *CheckSiteUseCase {
@@ -43,6 +50,7 @@ func NewCheckSiteUseCase(
 		repo:         repository,
 		checkResults: checkResults,
 		siteChecker:  checker,
+		publisher:    publisher,
 		pool:         pool,
 		logger:       logger,
 	}
@@ -80,6 +88,20 @@ func (u *CheckSiteUseCase) Execute(ctx context.Context) {
 
 		if err := u.checkResults.Create(ctx, v.ID, status); err != nil {
 			u.logger.Error("failed to save check result", "site_id", v.ID, "error", err)
+		}
+
+		event := messaging.SiteCheckEvent{
+			SiteID:       v.ID,
+			URL:          v.URL,
+			StatusCode:   status.Code,
+			IsAvailable:  status.Availability == domain.Available,
+			ResponseTime: status.Duration.Milliseconds(),
+			CheckedAt:    status.CheckedAt,
+			ErrorMessage: status.Error,
+		}
+
+		if err := u.publisher.Publish(ctx, event); err != nil {
+			u.logger.Error("failed to publish check event", "site_id", v.ID, "error", err)
 		}
 	}
 }

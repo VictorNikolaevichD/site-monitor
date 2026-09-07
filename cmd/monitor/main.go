@@ -21,6 +21,7 @@ import (
 	sitehandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/site"
 	swaggerhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/swagger"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/health"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/messaging"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/middleware"
 	checkresultrepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/checkresult"
 	siterepo "gitlab.com/Dokuchaevvn/site-monitor/internal/repository/site"
@@ -61,6 +62,14 @@ func main() {
 	defer dbConn.Close()
 	logger.Info("postgres connected")
 
+	producer := messaging.NewKafkaProducer(cfg.Kafka.Broker, cfg.Kafka.Topic, logger)
+	defer func() {
+		if err := producer.Close(); err != nil {
+			logger.Error("failed to close kafka producer", "error", err)
+		}
+	}()
+	logger.Info("kafka producer created", "broker", cfg.Kafka.Broker, "topic", cfg.Kafka.Topic)
+
 	swaggerHandler := swaggerhandler.NewHandler()
 
 	siteRepository := siterepo.NewPostgresSiteRepository(logger)
@@ -81,6 +90,7 @@ func main() {
 		siteRepository,
 		checkResultRepository,
 		checker.NewChecker(cfg.HTTPTimeout),
+		producer,
 		dbConn,
 		logger,
 	)
@@ -133,6 +143,8 @@ func getConfig(logger *slog.Logger) (*config.Config, error) {
 		"http_addr", cfg.HTTPAddr,
 		"log_level", cfg.LogLevel,
 		"http_timeout", cfg.HTTPTimeout,
+		"kafka_broker", cfg.Kafka.Broker,
+		"kafka_topic", cfg.Kafka.Topic,
 	)
 	return cfg, nil
 }

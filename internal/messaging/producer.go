@@ -25,10 +25,10 @@ func NewKafkaProducer(broker, topic string, logger *slog.Logger) *KafkaProducer 
 		Async:        true,
 		Completion: func(messages []kafka.Message, err error) {
 			if err != nil {
-				logger.Error("kafka publish failed", "error", err, "count", len(messages))
+				producer.logger.Error("kafka publish failed", "error", err, "count", len(messages))
 				return
 			}
-			logger.Debug("kafka publish succeeded", "count", len(messages))
+			producer.logger.Debug("kafka publish succeeded", "count", len(messages))
 		},
 	}
 
