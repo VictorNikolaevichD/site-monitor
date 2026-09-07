@@ -9,6 +9,8 @@
 /bin/
 /build/
 /dist/
+.go/
+.gocache/
 
 # Тестовые бинарники
 *.test
