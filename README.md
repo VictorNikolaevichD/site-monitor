@@ -88,7 +88,10 @@ make help
 | `make restart` | перезапуск сервисов |
 | `make deps` | загрузка Go-зависимостей |
 | `make fmt` | форматирование кода |
-| `make test` | запуск тестов |
+| `make test` | запуск всех тестов |
+| `make test-verbose` | запуск всех тестов с подробным выводом |
+| `make test-cover` | запуск тестов с процентом покрытия |
+| `make test-cover-html` | HTML-отчёт о покрытии (`coverage.html`) |
 | `make migrate-up` | накатить следующую миграцию (один шаг) |
 | `make migrate-up-head` | накатить все новые миграции |
 | `make migrate-down` | откатить последнюю миграцию (один шаг) |

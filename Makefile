@@ -51,7 +51,7 @@ restart:
 
 # 3. Команды разработки
 
-.PHONY: deps fmt test
+.PHONY: deps fmt test test-verbose test-cover test-cover-html
 
 deps:
 	go mod download
@@ -60,7 +60,17 @@ fmt:
 	go fmt ./...
 
 test:
+	go test ./...
+
+test-verbose:
 	go test -v ./...
+
+test-cover:
+	go test -cover ./...
+
+test-cover-html:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out -o coverage.html
 
 # TODO: make lint — запуск линтера (когда будет настроен)
 # lint:
@@ -122,6 +132,9 @@ help:
 	@echo   make fmt                - format code
 	@echo   make lint               - TODO: linter
 	@echo   make test               - run tests
+	@echo   make test-verbose       - run tests verbosely
+	@echo   make test-cover         - run tests with coverage
+	@echo   make test-cover-html    - run tests and write HTML coverage report
 	@echo.
 	@echo Database:
 	@echo   make migrate-up         - apply next migration from host (one step)
