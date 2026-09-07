@@ -37,7 +37,7 @@ func (c *Checker) Check(url string) Result {
 	}
 	defer func() {
 		_, _ = io.Copy(io.Discard, resp.Body)
-		resp.Body.Close()
+		_ = resp.Body.Close()
 	}()
 
 	return Result{

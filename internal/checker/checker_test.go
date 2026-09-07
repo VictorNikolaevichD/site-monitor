@@ -19,7 +19,7 @@ func TestChecker_Check(t *testing.T) {
 		{
 			name: "returns OK on 200",
 			setup: func(t *testing.T) string {
-				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusOK)
 				}))
 				t.Cleanup(server.Close)
@@ -32,7 +32,7 @@ func TestChecker_Check(t *testing.T) {
 		{
 			name: "returns unavailable on 404",
 			setup: func(t *testing.T) string {
-				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusNotFound)
 				}))
 				t.Cleanup(server.Close)
@@ -45,7 +45,7 @@ func TestChecker_Check(t *testing.T) {
 		{
 			name: "returns unavailable on 503",
 			setup: func(t *testing.T) string {
-				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusServiceUnavailable)
 				}))
 				t.Cleanup(server.Close)
@@ -58,7 +58,7 @@ func TestChecker_Check(t *testing.T) {
 		{
 			name: "returns error on connection timeout",
 			setup: func(t *testing.T) string {
-				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					time.Sleep(500 * time.Millisecond)
 					w.WriteHeader(http.StatusOK)
 				}))
@@ -71,8 +71,8 @@ func TestChecker_Check(t *testing.T) {
 		},
 		{
 			name: "returns error when server is unavailable",
-			setup: func(t *testing.T) string {
-				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			setup: func(_ *testing.T) string {
+				server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 					w.WriteHeader(http.StatusOK)
 				}))
 				url := server.URL

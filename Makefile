@@ -51,13 +51,16 @@ restart:
 
 # 3. Команды разработки
 
-.PHONY: deps fmt test test-verbose test-cover test-cover-html
+.PHONY: deps fmt lint test test-verbose test-cover test-cover-html
 
 deps:
 	go mod download
 
 fmt:
 	go fmt ./...
+
+lint:
+	golangci-lint run ./...
 
 test:
 	go test ./...
@@ -71,10 +74,6 @@ test-cover:
 test-cover-html:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
-
-# TODO: make lint — запуск линтера (когда будет настроен)
-# lint:
-# 	golangci-lint run
 
 # 4. Команды для работы с БД
 
@@ -130,7 +129,7 @@ help:
 	@echo Development:
 	@echo   make deps               - download Go modules
 	@echo   make fmt                - format code
-	@echo   make lint               - TODO: linter
+	@echo   make lint               - run linter
 	@echo   make test               - run tests
 	@echo   make test-verbose       - run tests verbosely
 	@echo   make test-cover         - run tests with coverage

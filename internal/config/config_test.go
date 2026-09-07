@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-const testDatabaseURL = "postgres://monitor:monitor@localhost:5432/site_monitor_db?sslmode=disable"
+const testDatabaseURL = "postgres://monitor:monitor@localhost:5432/site_monitor_db?sslmode=disable" //nolint:gosec // G101: test fixture, not a real secret
 
 const validFullYAML = `
 interval: 60s

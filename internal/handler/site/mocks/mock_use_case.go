@@ -58,7 +58,7 @@ func (m *MockGetAllUseCase) CallCount(funcName string) int {
 	return m.ctrl.GetCallCount(funcName)
 }
 
-func (m *MockGetAllUseCase) Execute(ctx context.Context) ([]domain.Site, error) {
+func (m *MockGetAllUseCase) Execute(_ context.Context) ([]domain.Site, error) {
 	res := m.ctrl.Call("Execute")
 
 	ret0, _ := res[0].([]domain.Site)
@@ -81,7 +81,7 @@ func (m *MockAddUseCase) CallCount(funcName string) int {
 	return m.ctrl.GetCallCount(funcName)
 }
 
-func (m *MockAddUseCase) Execute(ctx context.Context, command siteusecase.AddCommand) (domain.Site, error) {
+func (m *MockAddUseCase) Execute(_ context.Context, _ siteusecase.AddCommand) (domain.Site, error) {
 	res := m.ctrl.Call("Execute")
 
 	ret0, _ := res[0].(domain.Site)
@@ -104,7 +104,7 @@ func (m *MockDeleteByIDUseCase) CallCount(funcName string) int {
 	return m.ctrl.GetCallCount(funcName)
 }
 
-func (m *MockDeleteByIDUseCase) Execute(ctx context.Context, command siteusecase.DeleteCommand) error {
+func (m *MockDeleteByIDUseCase) Execute(_ context.Context, _ siteusecase.DeleteCommand) error {
 	res := m.ctrl.Call("Execute")
 
 	ret0, _ := res[0].(error)
@@ -126,7 +126,7 @@ func (m *MockGetStatusByIDUseCase) CallCount(funcName string) int {
 	return m.ctrl.GetCallCount(funcName)
 }
 
-func (m *MockGetStatusByIDUseCase) Execute(ctx context.Context, command siteusecase.GetStatusCommand) (domain.Site, error) {
+func (m *MockGetStatusByIDUseCase) Execute(_ context.Context, _ siteusecase.GetStatusCommand) (domain.Site, error) {
 	res := m.ctrl.Call("Execute")
 
 	ret0, _ := res[0].(domain.Site)
@@ -145,7 +145,7 @@ func NewMockGetHistoryByIDUseCase(ctrl *Controller) MockGetHistoryByIDUseCase {
 	}
 }
 
-func (m *MockGetHistoryByIDUseCase) Execute(ctx context.Context, command siteusecase.GetHistoryCommand) (siteusecase.GetHistoryResult, error) {
+func (m *MockGetHistoryByIDUseCase) Execute(_ context.Context, _ siteusecase.GetHistoryCommand) (siteusecase.GetHistoryResult, error) {
 	res := m.ctrl.Call("Execute")
 
 	ret0, _ := res[0].(siteusecase.GetHistoryResult)
