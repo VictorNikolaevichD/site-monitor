@@ -23,6 +23,9 @@ database:
   max_conn_idle_time: 30m
   connect_timeout: 5s
   query_timeout: 3s
+kafka:
+  broker: localhost:9092
+  topic: site-check-events
 `
 
 const validMinimalYAML = `
@@ -30,6 +33,9 @@ interval: 60s
 http_addr: :8080
 log_level: info
 http_timeout: 10s
+kafka:
+  broker: localhost:9092
+  topic: site-check-events
 `
 
 const invalidSyntaxYAML = `
@@ -39,6 +45,8 @@ http_addr: [broken
 
 func TestLoad_ValidFile(t *testing.T) {
 	t.Setenv("DATABASE_URL", testDatabaseURL)
+	t.Setenv("KAFKA_BROKER", "localhost:9092")
+	t.Setenv("KAFKA_TOPIC", "site-check-events")
 
 	cfg, err := Load(writeConfig(t, validFullYAML))
 	if err != nil {
@@ -78,10 +86,18 @@ func TestLoad_ValidFile(t *testing.T) {
 	if cfg.Database.QueryTimeout != 3*time.Second {
 		t.Fatalf("Database.QueryTimeout = %v, want 3s", cfg.Database.QueryTimeout)
 	}
+	if cfg.Kafka.Broker != "localhost:9092" {
+		t.Fatalf("Kafka.Broker = %q, want %q", cfg.Kafka.Broker, "localhost:9092")
+	}
+	if cfg.Kafka.Topic != "site-check-events" {
+		t.Fatalf("Kafka.Topic = %q, want %q", cfg.Kafka.Topic, "site-check-events")
+	}
 }
 
 func TestLoad_DefaultValues(t *testing.T) {
 	t.Setenv("DATABASE_URL", testDatabaseURL)
+	t.Setenv("KAFKA_BROKER", "localhost:9092")
+	t.Setenv("KAFKA_TOPIC", "site-check-events")
 
 	cfg, err := Load(writeConfig(t, validMinimalYAML))
 	if err != nil {
@@ -120,6 +136,12 @@ func TestLoad_DefaultValues(t *testing.T) {
 	}
 	if cfg.Database.QueryTimeout != 0 {
 		t.Fatalf("Database.QueryTimeout = %v, want 0 (default)", cfg.Database.QueryTimeout)
+	}
+	if cfg.Kafka.Broker != "localhost:9092" {
+		t.Fatalf("Kafka.Broker = %q, want %q", cfg.Kafka.Broker, "localhost:9092")
+	}
+	if cfg.Kafka.Topic != "site-check-events" {
+		t.Fatalf("Kafka.Topic = %q, want %q", cfg.Kafka.Topic, "site-check-events")
 	}
 }
 
@@ -180,6 +202,8 @@ func TestLoad_EnvPriority(t *testing.T) {
 	t.Setenv("HTTP_TIMEOUT", "2s")
 	t.Setenv("DB_MAX_CONNS", "99")
 	t.Setenv("APP_PORT", "9090")
+	t.Setenv("KAFKA_BROKER", "env-localhost:9092")
+	t.Setenv("KAFKA_TOPIC", "env-site-check-events")
 
 	cfg, err := Load(writeConfig(t, validFullYAML))
 	if err != nil {
@@ -200,6 +224,12 @@ func TestLoad_EnvPriority(t *testing.T) {
 	}
 	if cfg.HTTPAddr != ":9090" {
 		t.Fatalf("HTTPAddr = %q, want %q (APP_PORT), not :8080 (yaml)", cfg.HTTPAddr, ":9090")
+	}
+	if cfg.Kafka.Broker != "env-localhost:9092" {
+		t.Fatalf("Kafka.Broker = %q, want %q (env), not localhost:9092 (yaml)", cfg.Kafka.Broker, "env-localhost:9092")
+	}
+	if cfg.Kafka.Topic != "env-site-check-events" {
+		t.Fatalf("Kafka.Topic = %q, want %q (env), not site-check-events (yaml)", cfg.Kafka.Topic, "env-site-check-events")
 	}
 }
 
@@ -229,6 +259,34 @@ func TestValidate_RequiredFields(t *testing.T) {
 				cfg.LogLevel = ""
 			},
 			wantErr: "log_level must be one of: debug, info, warn, error",
+		},
+		{
+			name: "empty kafka broker",
+			mutate: func(cfg *Config) {
+				cfg.Kafka.Broker = ""
+			},
+			wantErr: "kafka.broker is required",
+		},
+		{
+			name: "blank kafka broker",
+			mutate: func(cfg *Config) {
+				cfg.Kafka.Broker = "  "
+			},
+			wantErr: "kafka.broker is required",
+		},
+		{
+			name: "empty kafka topic",
+			mutate: func(cfg *Config) {
+				cfg.Kafka.Topic = ""
+			},
+			wantErr: "kafka.topic is required",
+		},
+		{
+			name: "blank kafka topic",
+			mutate: func(cfg *Config) {
+				cfg.Kafka.Topic = "  "
+			},
+			wantErr: "kafka.topic is required",
 		},
 	}
 
@@ -316,5 +374,9 @@ func validConfig() Config {
 		HTTPAddr:    ":8080",
 		LogLevel:    "info",
 		HTTPTimeout: 10 * time.Second,
+		Kafka: Kafka{
+			Broker: "localhost:9092",
+			Topic:  "site-check-events",
+		},
 	}
 }

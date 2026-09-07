@@ -23,6 +23,11 @@ type Database struct {
 	QueryTimeout    time.Duration `yaml:"query_timeout" env:"DB_QUERY_TIMEOUT"`
 }
 
+type Kafka struct {
+	Broker string `yaml:"broker" env:"KAFKA_BROKER"`
+	Topic  string `yaml:"topic" env:"KAFKA_TOPIC"`
+}
+
 type Config struct {
 	Interval    time.Duration `yaml:"interval" env:"CHECK_INTERVAL"`
 	HTTPAddr    string        `yaml:"http_addr"`
@@ -30,6 +35,7 @@ type Config struct {
 	HTTPTimeout time.Duration `yaml:"http_timeout" env:"HTTP_TIMEOUT"`
 	AppPort     int           `yaml:"-" env:"APP_PORT"`
 	Database    Database      `yaml:"database"`
+	Kafka       Kafka         `yaml:"kafka"`
 }
 
 func Load(path string) (*Config, error) {
@@ -80,6 +86,14 @@ func (c *Config) Validate() error {
 
 	if _, err := parseLogLevel(c.LogLevel); err != nil {
 		return err
+	}
+
+	if strings.TrimSpace(c.Kafka.Broker) == "" {
+		return errors.New("kafka.broker is required")
+	}
+
+	if strings.TrimSpace(c.Kafka.Topic) == "" {
+		return errors.New("kafka.topic is required")
 	}
 
 	return nil

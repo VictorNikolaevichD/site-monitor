@@ -9,3 +9,6 @@ database:
   max_conn_idle_time: 30m
   connect_timeout: 5s
   query_timeout: 3s
+kafka:
+  broker: localhost:9092
+  topic: site-check-events
