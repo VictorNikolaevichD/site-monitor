@@ -1,3 +1,10 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_OPEN_MERGE_REQUESTS
+      when: never
+    - if: $CI_PIPELINE_SOURCE == "push"
+
 stages:
   - test
 
@@ -22,4 +29,11 @@ cache:
 test:
   stage: test
   script:
-    - go test ./...
+    - go test -coverprofile=coverage.out ./...
+    - go tool cover -func=coverage.out
+  coverage: '/total:\s+\(statements\)\s+(\d+\.\d+)%/'
+  artifacts:
+    when: always
+    paths:
+      - coverage.out
+    expire_in: 7 days
