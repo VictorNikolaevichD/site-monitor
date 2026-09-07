@@ -1,5 +1,7 @@
 # site-monitor
 
+[![Pipeline status](https://gitlab.com/Dokuchaevvn/site-monitor/badges/main/pipeline.svg)](https://gitlab.com/Dokuchaevvn/site-monitor/-/pipelines)
+
 ## Сервис для мониторинга сайтов
 
 ***
@@ -88,6 +90,7 @@ make help
 | `make restart` | перезапуск сервисов |
 | `make deps` | загрузка Go-зависимостей |
 | `make fmt` | форматирование кода |
+| `make lint` | запуск golangci-lint |
 | `make test` | запуск всех тестов |
 | `make test-verbose` | запуск всех тестов с подробным выводом |
 | `make test-cover` | запуск тестов с процентом покрытия |
@@ -108,6 +111,17 @@ make help
 make build VERSION=v1.1.0-beta
 make up VERSION=v1.1.0-beta
 ```
+
+### CI
+
+Конфигурация: `.gitlab-ci.yml`. Пайплайн запускается при push и при merge request.
+
+| Job | Что делает |
+|-----|------------|
+| `test` | unit-тесты и покрытие |
+| `lint` | golangci-lint по всему проекту |
+
+Правила линтера: `.golangci.yaml`. Локально: `make test`, `make lint`.
 
 ### Миграции БД
 
