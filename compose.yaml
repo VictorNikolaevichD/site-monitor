@@ -37,6 +37,29 @@ services:
     networks:
       - monitor-network
 
+  notification:
+    build:
+      context: .
+      dockerfile: Dockerfile.notification
+      args:
+        VERSION: ${VERSION:-dev}
+    env_file:
+      - .env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/health || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    depends_on:
+      kafka:
+        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
+    networks:
+      - monitor-network
+
   postgres:
     image: postgres:17-alpine
     ports:
