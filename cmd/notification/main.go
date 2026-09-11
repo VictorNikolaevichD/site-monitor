@@ -13,6 +13,7 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/buildinfo"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/config"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler"
+	eventhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler/event"
 	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler/health"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/health"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/messaging"
@@ -45,6 +46,8 @@ func main() {
 	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt)
 	healthHandler := healthhandler.NewHandler(healthChecker)
 
+	eventHandler := eventhandler.NewHandler(logger)
+
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(signals)
@@ -55,13 +58,24 @@ func main() {
 	httpServer := httpserver.NewServer(cfg, logger, router)
 	go runServer(httpServer, cfg, logger)
 
-	sig := <-signals
-	logger.Info("shutdown signal received", "signal", sig.String())
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	if err := httpServer.Shutdown(ctx); err != nil {
+	consumeDone := make(chan struct{})
+	go func() {
+		defer close(consumeDone)
+		runConsume(ctx, consumer, eventHandler.SiteEvent, logger)
+	}()
+
+	sig := <-signals
+	logger.Info("shutdown signal received", "signal", sig.String())
+	cancel()
+	<-consumeDone
+
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer shutdownCancel()
+
+	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		logger.Error("http server shutdown failed", "error", err)
 	}
 
@@ -85,5 +99,16 @@ func getConfig(logger *slog.Logger) (*config.Config, error) {
 func runServer(server *http.Server, cfg *config.Config, logger *slog.Logger) {
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Error("failed to start http server", "http_addr", cfg.HTTPAddr)
+	}
+}
+
+func runConsume(
+	ctx context.Context,
+	consumer *messaging.KafkaConsumer,
+	handler messaging.EventHandler,
+	logger *slog.Logger,
+) {
+	if err := consumer.Consume(ctx, handler); err != nil {
+		logger.Error("kafka consumer stopped", "error", err)
 	}
 }
