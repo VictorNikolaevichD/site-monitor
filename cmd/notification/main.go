@@ -15,6 +15,7 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler"
 	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler/health"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/health"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/messaging"
 	httpserver "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/server/http"
 )
 
@@ -33,7 +34,12 @@ func main() {
 		Level: cfg.SlogLevel(),
 	}))
 
-	// TODO: добавить кафка консьюмера
+	consumer := messaging.NewKafkaConsumer(cfg.Kafka.Broker, cfg.Kafka.GroupID, cfg.Kafka.Topic, logger)
+	defer func() {
+		if err := consumer.Close(); err != nil {
+			logger.Error("failed to close kafka consumer", "error", err)
+		}
+	}()
 	logger.Info("kafka consumer created", "broker", cfg.Kafka.Broker, "topic", cfg.Kafka.Topic)
 
 	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt)
