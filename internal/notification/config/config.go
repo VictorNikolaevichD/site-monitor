@@ -18,6 +18,7 @@ type Kafka struct {
 
 type Telegram struct {
 	BotToken string `env:"NOTIFICATION_TG_BOT_TOKEN"`
+	ChatID   string `env:"NOTIFICATION_TG_CHAT_ID"`
 }
 
 type Config struct {
@@ -46,6 +47,10 @@ func Load() (*Config, error) {
 func (c *Config) Validate() error {
 	if strings.TrimSpace(c.Telegram.BotToken) == "" {
 		return errors.New("NOTIFICATION_TG_BOT_TOKEN is required")
+	}
+
+	if strings.TrimSpace(c.Telegram.ChatID) == "" {
+		return errors.New("NOTIFICATION_TG_CHAT_ID is required")
 	}
 
 	if _, err := parseLogLevel(c.LogLevel); err != nil {

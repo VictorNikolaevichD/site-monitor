@@ -17,6 +17,8 @@ import (
 	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler/health"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/health"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/messaging"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/notifier"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/notifier/telegram"
 	httpserver "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/server/http"
 )
 
@@ -46,7 +48,9 @@ func main() {
 	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt)
 	healthHandler := healthhandler.NewHandler(healthChecker)
 
-	eventHandler := eventhandler.NewHandler(logger)
+	tgNotifier := telegram.NewTelegramNotifier(cfg.Telegram.BotToken, cfg.Telegram.ChatID, logger)
+	multiNotifier := notifier.NewMultiNotifier(logger, tgNotifier)
+	eventHandler := eventhandler.NewHandler(multiNotifier, logger)
 
 	signals := make(chan os.Signal, 1)
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
