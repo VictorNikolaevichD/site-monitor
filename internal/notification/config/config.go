@@ -5,15 +5,24 @@ import (
 	"fmt"
 	"log/slog"
 	"strings"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
 )
 
 type Kafka struct {
-	Broker  string `env:"KAFKA_BROKER,required,notEmpty"`
-	Topic   string `env:"KAFKA_TOPIC,required,notEmpty"`
-	GroupID string `env:"KAFKA_GROUP_ID,required,notEmpty"`
+	Broker   string `env:"KAFKA_BROKER,required,notEmpty"`
+	Topic    string `env:"KAFKA_TOPIC,required,notEmpty"`
+	GroupID  string `env:"KAFKA_GROUP_ID,required,notEmpty"`
+	DLQTopic string `env:"KAFKA_DLQ_TOPIC" envDefault:"site-check-events-dlq"`
+}
+
+type Retry struct {
+	Enabled         bool          `env:"NOTIFICATION_RETRY_ENABLED" envDefault:"true"`
+	MaxAttempts     int           `env:"NOTIFICATION_RETRY_MAX_ATTEMPTS" envDefault:"3"`
+	InitialInterval time.Duration `env:"NOTIFICATION_RETRY_INTERVAL" envDefault:"1s"`
+	Multiplier      float64       `env:"NOTIFICATION_RETRY_MULTIPLIER" envDefault:"2"`
 }
 
 type Telegram struct {
@@ -25,6 +34,7 @@ type Config struct {
 	HTTPAddr string `env:"NOTIFICATION_HTTP_ADDR" envDefault:":8081"`
 	LogLevel string `env:"NOTIFICATION_LOG_LEVEL" envDefault:"info"`
 	Kafka    Kafka
+	Retry    Retry
 	Telegram Telegram
 }
 
@@ -51,6 +61,22 @@ func (c *Config) Validate() error {
 
 	if strings.TrimSpace(c.Telegram.ChatID) == "" {
 		return errors.New("NOTIFICATION_TG_CHAT_ID is required")
+	}
+
+	if c.Retry.MaxAttempts < 1 {
+		return errors.New("NOTIFICATION_RETRY_MAX_ATTEMPTS must be greater than zero")
+	}
+
+	if c.Retry.InitialInterval <= 0 {
+		return errors.New("NOTIFICATION_RETRY_INTERVAL must be greater than zero")
+	}
+
+	if c.Retry.Multiplier < 1 {
+		return errors.New("NOTIFICATION_RETRY_MULTIPLIER must be greater than or equal to 1")
+	}
+
+	if strings.TrimSpace(c.Kafka.DLQTopic) == "" {
+		return errors.New("KAFKA_DLQ_TOPIC is required")
 	}
 
 	if _, err := parseLogLevel(c.LogLevel); err != nil {
