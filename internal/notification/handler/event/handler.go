@@ -32,7 +32,7 @@ func (h *Handler) SiteEvent(ctx context.Context, event messaging.SiteCheckEvent)
 
 	// TODO: добавить ещё в текст недостоющие данные из event, которые сейчас не попадают
 	if err := h.notifier.Send(ctx, notifier.Notification{
-		Title: "Site unavailabe",
+		Title: "Site unavailable",
 		Text:  fmt.Sprintf("URL %s with error: %s", event.URL, event.ErrorMessage),
 	}); err != nil {
 		h.logger.Error("Error send message", "error", err)

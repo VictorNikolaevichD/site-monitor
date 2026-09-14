@@ -9,6 +9,6 @@ const (
 )
 
 type Notification struct {
-	Title     string
-	Text      string
+	Title string
+	Text  string
 }
