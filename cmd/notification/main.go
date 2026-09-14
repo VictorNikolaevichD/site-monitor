@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/buildinfo"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/config"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler"
@@ -48,7 +49,11 @@ func main() {
 	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt)
 	healthHandler := healthhandler.NewHandler(healthChecker)
 
-	tgNotifier := telegram.NewTelegramNotifier(cfg.Telegram.BotToken, cfg.Telegram.ChatID, logger)
+	tgBot, err := tgbotapi.NewBotAPI(cfg.Telegram.BotToken)
+	if err != nil {
+		logger.Error("error creating telegram bot", "error", err)
+	}
+	tgNotifier := telegram.NewTelegramNotifier(tgBot, cfg.Telegram.ChatID, logger)
 	multiNotifier := notifier.NewMultiNotifier(logger, tgNotifier)
 	eventHandler := eventhandler.NewHandler(multiNotifier, logger)
 
@@ -56,7 +61,6 @@ func main() {
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(signals)
 
-	// TODO: возможно, добавить рекавери медлвейр
 	router := handler.NewRouter(healthHandler)
 
 	httpServer := httpserver.NewServer(cfg, logger, router)
