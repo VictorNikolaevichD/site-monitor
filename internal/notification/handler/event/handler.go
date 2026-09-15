@@ -2,6 +2,7 @@ package event
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
@@ -35,6 +36,9 @@ func (h *Handler) SiteEvent(ctx context.Context, event messaging.SiteCheckEvent)
 		Text:  fmt.Sprintf("URL %s with error: %s", event.URL, event.ErrorMessage),
 	}); err != nil {
 		h.logger.Error("Error send message", "error", err)
+		if errors.Is(err, notifier.ErrPermanent) {
+			return fmt.Errorf("%w: %v", messaging.ErrPermanent, err)
+		}
 		return err
 	}
 

@@ -32,34 +32,42 @@ func NewTelegramNotifier(bot *tgbotapi.BotAPI, chatID string, logger *slog.Logge
 func (tn *TelegramNotifier) Send(ctx context.Context, n notifier.Notification) error {
 	chatID, err := strconv.ParseInt(tn.chatID, 10, 64)
 	if err != nil {
-		return fmt.Errorf("error parsing chatID error: %w", err)
+		return fmt.Errorf("%w: parse chatID %v", notifier.ErrPermanent, err)
 	}
+
 	msg := tgbotapi.NewMessage(chatID, fmt.Sprintf("%s\n%s", n.Title, n.Text))
 
 	tn.mu.Lock()
 	defer tn.mu.Unlock()
 
-	for {
-		if err := tn.waitUntil(ctx, tn.notBefore); err != nil {
-			return err
-		}
+	if err := tn.waitUntil(ctx, tn.notBefore); err != nil {
+		return err
+	}
 
-		_, err := tn.bot.Send(msg)
-		if err == nil {
-			return nil
-		}
+	_, err = tn.bot.Send(msg)
+	if err == nil {
+		return nil
+	}
 
-		var tgErr *tgbotapi.Error
-		if !errors.As(err, &tgErr) || tgErr.Code != 429 {
-			return fmt.Errorf("error sending message to telegram error: %w", err)
-		}
+	var tgErr *tgbotapi.Error
+	if !errors.As(err, &tgErr) {
+		return fmt.Errorf("error sending message to telegram: %w", err)
+	}
 
-		retryAfter := time.Duration(tgErr.ResponseParameters.RetryAfter) * time.Second
+	if tgErr.Code == 429 {
+		retryAfter := time.Duration(tgErr.RetryAfter) * time.Second
 		if retryAfter <= 0 {
 			retryAfter = time.Second
 		}
 		tn.notBefore = time.Now().Add(retryAfter)
+		return fmt.Errorf("error sending message to telegram: %w", err)
 	}
+
+	if tgErr.Code >= 400 && tgErr.Code < 500 {
+		return fmt.Errorf("%w: telegram %d: %v", notifier.ErrPermanent, tgErr.Code, err)
+	}
+
+	return fmt.Errorf("error sending message to telegram: %w", err)
 }
 
 func (tn *TelegramNotifier) waitUntil(ctx context.Context, until time.Time) error {
