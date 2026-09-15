@@ -38,7 +38,14 @@ func main() {
 		Level: cfg.SlogLevel(),
 	}))
 
-	consumer := messaging.NewKafkaConsumer(cfg.Kafka.Broker, cfg.Kafka.GroupID, cfg.Kafka.Topic, logger)
+	consumer := messaging.NewKafkaConsumer(
+		cfg.Kafka.Broker,
+		cfg.Kafka.GroupID,
+		cfg.Kafka.Topic,
+		cfg.Kafka.DLQTopic,
+		cfg.Retry,
+		logger,
+	)
 	defer func() {
 		if err := consumer.Close(); err != nil {
 			logger.Error("failed to close kafka consumer", "error", err)
