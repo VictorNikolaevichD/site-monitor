@@ -51,7 +51,7 @@ restart:
 
 # 3. Команды разработки
 
-.PHONY: deps fmt lint test test-verbose test-cover test-cover-html
+.PHONY: deps fmt lint test test-verbose test-cover test-cover-html proto proto-lint
 
 deps:
 	go mod download
@@ -74,6 +74,12 @@ test-cover:
 test-cover-html:
 	go test -coverprofile=coverage.out ./...
 	go tool cover -html=coverage.out -o coverage.html
+
+proto:
+	buf generate
+
+proto-lint:
+	buf lint
 
 # 4. Команды для работы с БД
 
@@ -134,6 +140,8 @@ help:
 	@echo   make test-verbose       - run tests verbosely
 	@echo   make test-cover         - run tests with coverage
 	@echo   make test-cover-html    - run tests and write HTML coverage report
+	@echo   make proto              - generate Go code from protobuf
+	@echo   make proto-lint         - lint protobuf files
 	@echo.
 	@echo Database:
 	@echo   make migrate-up         - apply next migration from host (one step)
