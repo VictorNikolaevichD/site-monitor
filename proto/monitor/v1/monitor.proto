@@ -5,7 +5,6 @@ package monitor.v1;
 option go_package = "gitlab.com/Dokuchaevvn/site-monitor/gen/go/monitor/v1;monitorv1";
 
 import "google/protobuf/timestamp.proto";
-import "google/protobuf/empty.proto";
 
 message Site {
   string id = 1;
@@ -21,6 +20,18 @@ message CheckResult {
   int64 duration_ms = 5;
   string error = 6;
 }
+
+message GetSitesRequest {}
+
+message GetSiteResponse {
+  Site site = 1;
+}
+
+message CreateSiteResponse {
+  Site site = 1;
+}
+
+message DeleteSiteResponse {}
 
 message GetSitesResponse {
   repeated Site sites = 1;
@@ -66,10 +77,10 @@ message GetSiteHistoryResponse {
 }
 
 service MonitorService {
-  rpc GetSites(google.protobuf.Empty) returns (GetSitesResponse);
-  rpc GetSite(GetSiteRequest) returns (Site);
-  rpc CreateSite(CreateSiteRequest) returns (Site);
-  rpc DeleteSite(DeleteSiteRequest) returns (google.protobuf.Empty);
+  rpc GetSites(GetSitesRequest) returns (GetSitesResponse);
+  rpc GetSite(GetSiteRequest) returns (GetSiteResponse);
+  rpc CreateSite(CreateSiteRequest) returns (CreateSiteResponse);
+  rpc DeleteSite(DeleteSiteRequest) returns (DeleteSiteResponse);
   rpc GetSiteStatus(GetSiteStatusRequest) returns (GetSiteStatusResponse);
   rpc GetSiteHistory(GetSiteHistoryRequest) returns (GetSiteHistoryResponse);
 }
