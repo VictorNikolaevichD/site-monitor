@@ -39,7 +39,9 @@ func main() {
 		logger.Error("failed to create gRPC client", "error", err)
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	logger.Info("monitor gRPC client created", "grpc_addr", cfg.GRPCAddr)
 

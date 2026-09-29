@@ -23,7 +23,7 @@ type Config struct {
 func Load(path string) (*Config, error) {
 	_ = godotenv.Load()
 
-	data, err := os.ReadFile(path) // nolint:gosec // G304: path is the config file
+	data, err := os.ReadFile(path) //nolint:gosec // G304: path is the config file
 	if err != nil {
 		return nil, fmt.Errorf("read config file: %w", err)
 	}

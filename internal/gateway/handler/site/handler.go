@@ -121,7 +121,7 @@ func (h *Handler) GetHistoryByID(w http.ResponseWriter, r *http.Request) {
 
 	var limit, offset int32
 	if raw := r.URL.Query().Get("limit"); raw != "" {
-		n, err := strconv.Atoi(raw)
+		n, err := strconv.ParseInt(raw, 10, 32)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, "некорректный параметр limit")
 			return
@@ -129,7 +129,7 @@ func (h *Handler) GetHistoryByID(w http.ResponseWriter, r *http.Request) {
 		limit = int32(n)
 	}
 	if raw := r.URL.Query().Get("offset"); raw != "" {
-		n, err := strconv.Atoi(raw)
+		n, err := strconv.ParseInt(raw, 10, 32)
 		if err != nil {
 			writeError(w, http.StatusBadRequest, "некорректный параметр offset")
 			return

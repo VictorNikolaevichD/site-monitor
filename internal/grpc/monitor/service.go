@@ -139,8 +139,8 @@ func (s *Service) GetSiteHistory(ctx context.Context, request *monitorv1.GetSite
 
 	return &monitorv1.GetSiteHistoryResponse{
 		Results: toProtoCheckResults(result.Items),
-		Total:   int32(result.Total),
-		Limit:   int32(result.Limit),
-		Offset:  int32(result.Offset),
+		Total:   intToInt32(result.Total),
+		Limit:   intToInt32(result.Limit),
+		Offset:  intToInt32(result.Offset),
 	}, nil
 }

@@ -1,6 +1,8 @@
 package monitor
 
 import (
+	"math"
+
 	monitorv1 "gitlab.com/Dokuchaevvn/site-monitor/gen/go/monitor/v1"
 	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -36,7 +38,7 @@ func toProtoSiteStatus(site domain.Site) *monitorv1.GetSiteStatusResponse {
 	resp.CheckedAt = timestamppb.New(lc.CheckedAt)
 	resp.DurationMs = lc.Duration.Milliseconds()
 	if lc.Code != 0 {
-		resp.Code = int32(lc.Code)
+		resp.Code = intToInt32(lc.Code)
 	}
 	resp.Error = lc.Error
 	return resp
@@ -51,7 +53,7 @@ func toProtoCheckResult(result domain.CheckResult) *monitorv1.CheckResult {
 		Error:        result.Error,
 	}
 	if result.Code != 0 {
-		out.Code = int32(result.Code)
+		out.Code = intToInt32(result.Code)
 	}
 	return out
 }
@@ -62,4 +64,14 @@ func toProtoCheckResults(items []domain.CheckResult) []*monitorv1.CheckResult {
 		out = append(out, toProtoCheckResult(item))
 	}
 	return out
+}
+
+func intToInt32(v int) int32 {
+	if v > math.MaxInt32 {
+		return math.MaxInt32
+	}
+	if v < math.MinInt32 {
+		return math.MinInt32
+	}
+	return int32(v)
 }
