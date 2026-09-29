@@ -14,6 +14,7 @@ const testDatabaseURL = "postgres://monitor:monitor@localhost:5432/site_monitor_
 const validFullYAML = `
 interval: 60s
 http_addr: :8080
+grpc_addr: :9090
 log_level: info
 http_timeout: 10s
 database:
@@ -31,6 +32,7 @@ kafka:
 const validMinimalYAML = `
 interval: 60s
 http_addr: :8080
+grpc_addr: :9090
 log_level: info
 http_timeout: 10s
 kafka:
@@ -202,6 +204,7 @@ func TestLoad_EnvPriority(t *testing.T) {
 	t.Setenv("HTTP_TIMEOUT", "2s")
 	t.Setenv("DB_MAX_CONNS", "99")
 	t.Setenv("APP_PORT", "9090")
+	t.Setenv("GRPC_PORT", "9091")
 	t.Setenv("KAFKA_BROKER", "env-localhost:9092")
 	t.Setenv("KAFKA_TOPIC", "env-site-check-events")
 
@@ -224,6 +227,9 @@ func TestLoad_EnvPriority(t *testing.T) {
 	}
 	if cfg.HTTPAddr != ":9090" {
 		t.Fatalf("HTTPAddr = %q, want %q (APP_PORT), not :8080 (yaml)", cfg.HTTPAddr, ":9090")
+	}
+	if cfg.GRPCAddr != ":9091" {
+		t.Fatalf("GRPCAddr = %q, want %q (GRPC_PORT), not :9090 (yaml)", cfg.GRPCAddr, ":9091")
 	}
 	if cfg.Kafka.Broker != "env-localhost:9092" {
 		t.Fatalf("Kafka.Broker = %q, want %q (env), not localhost:9092 (yaml)", cfg.Kafka.Broker, "env-localhost:9092")
@@ -252,6 +258,20 @@ func TestValidate_RequiredFields(t *testing.T) {
 				cfg.HTTPAddr = "  "
 			},
 			wantErr: "http_addr is required",
+		},
+		{
+			name: "empty grpc_addr",
+			mutate: func(cfg *Config) {
+				cfg.GRPCAddr = ""
+			},
+			wantErr: "grpc_addr is required",
+		},
+		{
+			name: "blank grpc_addr",
+			mutate: func(cfg *Config) {
+				cfg.GRPCAddr = "  "
+			},
+			wantErr: "grpc_addr is required",
 		},
 		{
 			name: "empty log_level",
@@ -372,6 +392,7 @@ func validConfig() Config {
 	return Config{
 		Interval:    60 * time.Second,
 		HTTPAddr:    ":8080",
+		GRPCAddr:    ":9090",
 		LogLevel:    "info",
 		HTTPTimeout: 10 * time.Second,
 		Kafka: Kafka{

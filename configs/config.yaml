@@ -1,5 +1,6 @@
 interval: 60s
 http_addr: :8080
+grpc_addr: :9090
 log_level: info
 http_timeout: 10s
 database:

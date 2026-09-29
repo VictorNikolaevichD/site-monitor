@@ -31,9 +31,11 @@ type Kafka struct {
 type Config struct {
 	Interval    time.Duration `yaml:"interval" env:"CHECK_INTERVAL"`
 	HTTPAddr    string        `yaml:"http_addr"`
+	GRPCAddr    string        `yaml:"grpc_addr"`
 	LogLevel    string        `yaml:"log_level" env:"LOG_LEVEL"`
 	HTTPTimeout time.Duration `yaml:"http_timeout" env:"HTTP_TIMEOUT"`
 	AppPort     int           `yaml:"-" env:"APP_PORT"`
+	GRPCPort    int           `yaml:"-" env:"GRPC_PORT"`
 	Database    Database      `yaml:"database"`
 	Kafka       Kafka         `yaml:"kafka"`
 }
@@ -69,6 +71,10 @@ func (c *Config) applyEnvOverrides() {
 	if c.AppPort != 0 {
 		c.HTTPAddr = fmt.Sprintf(":%d", c.AppPort)
 	}
+
+	if c.GRPCPort != 0 {
+		c.GRPCAddr = fmt.Sprintf(":%d", c.GRPCPort)
+	}
 }
 
 func (c *Config) Validate() error {
@@ -78,6 +84,10 @@ func (c *Config) Validate() error {
 
 	if strings.TrimSpace(c.HTTPAddr) == "" {
 		return errors.New("http_addr is required")
+	}
+
+	if strings.TrimSpace(c.GRPCAddr) == "" {
+		return errors.New("grpc_addr is required")
 	}
 
 	if c.HTTPTimeout <= 0 {
