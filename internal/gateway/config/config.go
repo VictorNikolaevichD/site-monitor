@@ -13,9 +13,11 @@ import (
 )
 
 type Config struct {
-	HTTPAddr string `yaml:"http_addr"`
-	GRPCAddr string `yaml:"grpc_addr"`
-	LogLevel string `yaml:"log_level" env:"LOG_LEVEL"`
+	HTTPAddr        string `yaml:"http_addr"`
+	GRPCAddr        string `yaml:"grpc_addr"`
+	LogLevel        string `yaml:"log_level" env:"LOG_LEVEL"`
+	GatewayPort     int    `yaml:"-" env:"GATEWAY_PORT"`
+	MonitorGRPCAddr string `yaml:"-" env:"MONITOR_GRPC_ADDR"`
 }
 
 func Load(path string) (*Config, error) {
@@ -35,6 +37,8 @@ func Load(path string) (*Config, error) {
 	if err := env.Parse(&cfg); err != nil {
 		return nil, fmt.Errorf("parse env config: %w", err)
 	}
+
+	cfg.applyEnvOverrides()
 
 	if err := cfg.Validate(); err != nil {
 		return nil, fmt.Errorf("validate config: %w", err)
@@ -65,6 +69,15 @@ func (c *Config) SlogLevel() slog.Level {
 		return slog.LevelInfo
 	}
 	return level
+}
+
+func (c *Config) applyEnvOverrides() {
+	if c.GatewayPort != 0 {
+		c.HTTPAddr = fmt.Sprintf(":%d", c.GatewayPort)
+	}
+	if strings.TrimSpace(c.MonitorGRPCAddr) != "" {
+		c.GRPCAddr = c.MonitorGRPCAddr
+	}
 }
 
 func parseLogLevel(value string) (slog.Level, error) {

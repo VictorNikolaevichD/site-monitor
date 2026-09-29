@@ -38,6 +38,25 @@ services:
     networks:
       - monitor-network
 
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
+      args:
+        VERSION: ${VERSION:-dev}
+    environment:
+      MONITOR_GRPC_ADDR: site-monitor:${GRPC_PORT}
+      GATEWAY_PORT: ${GATEWAY_PORT}
+    volumes:
+      - "./configs/gateway.yaml:/configs/gateway.yaml:ro"
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT}:${GATEWAY_PORT}"
+    depends_on:
+      - site-monitor
+    networks:
+      - monitor-network
+
   notification:
     build:
       context: .
