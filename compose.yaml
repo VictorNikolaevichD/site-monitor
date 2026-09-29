@@ -25,6 +25,7 @@ services:
     restart: unless-stopped
     ports:
       - "${APP_PORT}:${APP_PORT}"
+      - "${GRPC_PORT}:${GRPC_PORT}"
     depends_on:
       postgres:
         condition: service_healthy

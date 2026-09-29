@@ -15,6 +15,7 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
+	grpcserver "gitlab.com/Dokuchaevvn/site-monitor/internal/grpc"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
 	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/health"
 	pinghandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping"
@@ -29,6 +30,7 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/server"
 	monitorusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/monitor"
 	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
+	"google.golang.org/grpc"
 )
 
 // @title Site Monitor API
@@ -110,6 +112,11 @@ func main() {
 	httpServer := server.NewServer(cfg, logger, httpHandler)
 	go runServer(httpServer, cfg, logger)
 
+	grpcServer := grpcserver.NewServer(cfg.GRPCAddr, logger, func(req grpc.ServiceRegistrar) {
+		// TODO: add later RegisterMonitorServiceServer
+	})
+	go runGRPCServer(grpcServer, cfg, logger)
+
 	sh := scheduler.New(checkSiteUseCase, cfg.Interval, logger)
 	sh.Start()
 
@@ -124,6 +131,7 @@ func main() {
 	if err := httpServer.Shutdown(ctx); err != nil {
 		logger.Error("http server shutdown failed", "error", err)
 	}
+	grpcServer.GracefulStop()
 
 	logger.Info("site monitor stopped.")
 }
@@ -141,6 +149,7 @@ func getConfig(logger *slog.Logger) (*config.Config, error) {
 	logger.Info("config parsed",
 		"interval", cfg.Interval,
 		"http_addr", cfg.HTTPAddr,
+		"grpc_addr", cfg.GRPCAddr,
 		"log_level", cfg.LogLevel,
 		"http_timeout", cfg.HTTPTimeout,
 		"kafka_broker", cfg.Kafka.Broker,
@@ -152,5 +161,15 @@ func getConfig(logger *slog.Logger) (*config.Config, error) {
 func runServer(server *http.Server, cfg *config.Config, logger *slog.Logger) {
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logger.Error("failed to start http server", "http_addr", cfg.HTTPAddr)
+	}
+}
+
+type GRPCServer interface {
+	Run() error
+}
+
+func runGRPCServer(server GRPCServer, cfg *config.Config, logger *slog.Logger) {
+	if err := server.Run(); err != nil {
+		logger.Error("failed to start grpc server", "grpc_addr", cfg.GRPCAddr)
 	}
 }
