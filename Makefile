@@ -121,41 +121,41 @@ shell:
 	docker compose exec site-monitor sh
 
 help:
-	@echo Build:
-	@echo   make build              - build Go app locally
-	@echo   make docker-build       - build images via docker compose
-	@echo   make clean              - remove build artifacts
-	@echo.
-	@echo Run:
-	@echo   make run                - run app locally
-	@echo   make up                 - start all services (applies migrations)
-	@echo   make down               - stop all services
-	@echo   make restart            - restart services
-	@echo.
-	@echo Development:
-	@echo   make deps               - download Go modules
-	@echo   make fmt                - format code
-	@echo   make lint               - run linter
-	@echo   make test               - run tests
-	@echo   make test-verbose       - run tests verbosely
-	@echo   make test-cover         - run tests with coverage
-	@echo   make test-cover-html    - run tests and write HTML coverage report
-	@echo   make proto              - generate Go code from protobuf
-	@echo   make proto-lint         - lint protobuf files
-	@echo.
-	@echo Database:
-	@echo   make migrate-up         - apply next migration from host (one step)
-	@echo   make migrate-up-head    - apply all pending migrations from host
-	@echo   make migrate-down       - rollback last migration (one step)
-	@echo   make migrate-down-base  - rollback all migrations to base
-	@echo   make migrate-version    - show current database version
-	@echo   make db-reset           - recreate DB volume and stack (migrations on up)
-	@echo.
-	@echo Helpers:
-	@echo   make logs               - follow container logs
-	@echo   make ps                 - show container status
-	@echo   make shell              - shell into app container
-	@echo   make help               - show this help
-	@echo.
-	@echo Variables:
-	@echo   VERSION=v1.0.0          - app version (default: dev)
+	@echo "Build:"
+	@echo "  make build              - build Go app locally"
+	@echo "  make docker-build       - build images via docker compose"
+	@echo "  make clean              - remove build artifacts"
+	@echo ""
+	@echo "Run:"
+	@echo "  make run                - run app locally"
+	@echo "  make up                 - start all services (applies migrations)"
+	@echo "  make down               - stop all services"
+	@echo "  make restart            - restart services"
+	@echo ""
+	@echo "Development:"
+	@echo "  make deps               - download Go modules"
+	@echo "  make fmt                - format code"
+	@echo "  make lint               - run linter"
+	@echo "  make test               - run tests"
+	@echo "  make test-verbose       - run tests verbosely"
+	@echo "  make test-cover         - run tests with coverage"
+	@echo "  make test-cover-html    - run tests and write HTML coverage report"
+	@echo "  make proto              - generate Go code from protobuf"
+	@echo "  make proto-lint         - lint protobuf files"
+	@echo ""
+	@echo "Database:"
+	@echo "  make migrate-up         - apply next migration from host (one step)"
+	@echo "  make migrate-up-head    - apply all pending migrations from host"
+	@echo "  make migrate-down       - rollback last migration (one step)"
+	@echo "  make migrate-down-base  - rollback all migrations to base"
+	@echo "  make migrate-version    - show current database version"
+	@echo "  make db-reset           - recreate DB volume and stack (migrations on up)"
+	@echo ""
+	@echo "Helpers:"
+	@echo "  make logs               - follow container logs"
+	@echo "  make ps                 - show container status"
+	@echo "  make shell              - shell into app container"
+	@echo "  make help               - show this help"
+	@echo ""
+	@echo "Variables:"
+	@echo "  VERSION=v1.0.0          - app version (default: dev)"
