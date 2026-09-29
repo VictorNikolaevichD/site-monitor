@@ -31,3 +31,7 @@ coverage.*
 # ОС
 .DS_Store
 Thumbs.db
+
+# exe
+monitor
+notification

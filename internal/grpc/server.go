@@ -14,7 +14,7 @@ type Server struct {
 	server *grpc.Server
 }
 
-func NewServer(addr string, log *slog.Logger, register func(grpc.ServiceRegistrar)) *Server {
+func NewServer(addr string, log *slog.Logger, register func(*grpc.Server)) *Server {
 	s := grpc.NewServer()
 	register(s)
 

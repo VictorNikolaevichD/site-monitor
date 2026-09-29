@@ -11,11 +11,16 @@ import (
 	"syscall"
 	"time"
 
+	monitorv1 "gitlab.com/Dokuchaevvn/site-monitor/gen/go/monitor/v1"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
 	grpcserver "gitlab.com/Dokuchaevvn/site-monitor/internal/grpc"
+	grpcmonitor "gitlab.com/Dokuchaevvn/site-monitor/internal/grpc/monitor"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
 	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/health"
 	pinghandler "gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping"
@@ -30,7 +35,6 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/server"
 	monitorusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/monitor"
 	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
-	"google.golang.org/grpc"
 )
 
 // @title Site Monitor API
@@ -76,6 +80,7 @@ func main() {
 
 	siteRepository := siterepo.NewPostgresSiteRepository(logger)
 	checkResultRepository := checkresultrepo.NewPostgresCheckResultRepository(logger)
+	siteGetByIDUseCase := siteusecase.NewGetByIDUseCase(siteRepository, dbConn)
 	siteGetAllUseCase := siteusecase.NewGetAllUseCase(siteRepository, dbConn)
 	siteAddUseCase := siteusecase.NewAddUseCase(siteRepository, dbConn, logger)
 	siteDeleteUseCase := siteusecase.NewDeleteUseCase(siteRepository, checkResultRepository, dbConn, logger)
@@ -97,6 +102,15 @@ func main() {
 		logger,
 	)
 
+	monitorService := grpcmonitor.NewService(
+		siteGetAllUseCase,
+		siteGetByIDUseCase,
+		siteAddUseCase,
+		siteDeleteUseCase,
+		siteGetStatusUseCase,
+		siteGetHistoryUseCase,
+	)
+
 	pingHandler := pinghandler.NewHandler()
 	healthChecker := health.NewHealthChecker(buildinfo.Version, startedAt, db.NewPostgresChecker(dbConn))
 	healthHandler := healthhandler.NewHandler(healthChecker)
@@ -112,8 +126,9 @@ func main() {
 	httpServer := server.NewServer(cfg, logger, httpHandler)
 	go runServer(httpServer, cfg, logger)
 
-	grpcServer := grpcserver.NewServer(cfg.GRPCAddr, logger, func(req grpc.ServiceRegistrar) {
-		// TODO: add later RegisterMonitorServiceServer
+	grpcServer := grpcserver.NewServer(cfg.GRPCAddr, logger, func(s *grpc.Server) {
+		monitorv1.RegisterMonitorServiceServer(s, monitorService)
+		reflection.Register(s)
 	})
 	go runGRPCServer(grpcServer, cfg, logger)
 
