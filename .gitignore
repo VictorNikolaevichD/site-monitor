@@ -33,6 +33,6 @@ coverage.*
 Thumbs.db
 
 # exe
-monitor
-notification
-gateway
+/monitor
+/notification
+/gateway
