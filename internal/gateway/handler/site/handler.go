@@ -29,7 +29,7 @@ func NewHandler(monitor MonitorClient) *Handler {
 	}
 }
 
-func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Health(w http.ResponseWriter, _ *http.Request) {
 	if !h.monitor.Ready() {
 		writeError(w, http.StatusServiceUnavailable, "monitor unavailable")
 		return
