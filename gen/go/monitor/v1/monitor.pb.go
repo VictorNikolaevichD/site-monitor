@@ -828,7 +828,7 @@ const file_monitor_v1_monitor_proto_rawDesc = "" +
 	"\n" +
 	"DeleteSite\x12\x1d.monitor.v1.DeleteSiteRequest\x1a\x1e.monitor.v1.DeleteSiteResponse\x12T\n" +
 	"\rGetSiteStatus\x12 .monitor.v1.GetSiteStatusRequest\x1a!.monitor.v1.GetSiteStatusResponse\x12W\n" +
-	"\x0eGetSiteHistory\x12!.monitor.v1.GetSiteHistoryRequest\x1a\".monitor.v1.GetSiteHistoryResponseBAZ?gitlab.com/Dokuchaevvn/site-monitor/gen/go/monitor/v1;monitorv1b\x06proto3"
+	"\x0eGetSiteHistory\x12!.monitor.v1.GetSiteHistoryRequest\x1a\".monitor.v1.GetSiteHistoryResponseBHZFgithub.com/ViktorNikolaevichD/site-monitor/gen/go/monitor/v1;monitorv1b\x06proto3"
 
 var (
 	file_monitor_v1_monitor_proto_rawDescOnce sync.Once

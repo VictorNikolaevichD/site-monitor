@@ -1,234 +1,245 @@
 # site-monitor
 
-[![Pipeline status](https://gitlab.com/Dokuchaevvn/site-monitor/badges/main/pipeline.svg)](https://gitlab.com/Dokuchaevvn/site-monitor/-/pipelines)
+[![CI](https://github.com/ViktorNikolaevichD/site-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/ViktorNikolaevichD/site-monitor/actions/workflows/ci.yml)
 
-## Сервис для мониторинга сайтов
+Сервис мониторинга доступности сайтов на Go.
 
-***
+Периодически проверяет URL по HTTP, хранит результаты в PostgreSQL, отдаёт API (REST и gRPC), публикует события в Kafka и шлёт уведомления в Telegram. Снаружи удобнее ходить через REST API Gateway, который проксирует вызовы в monitor по gRPC.
 
-### Запуск для разработки
+**Стек:** Go · PostgreSQL · Kafka · gRPC · Docker Compose · goose · slog
 
-Из корня проекта:
+---
 
-```
-go run ./cmd/monitor -config configs/config.yaml
-```
+## Возможности
 
-При таком запуске в информации о сборке будет указана версия `dev`.
+- CRUD сайтов для мониторинга
+- Периодическая проверка доступности (интервал и таймаут в конфиге)
+- Текущий статус и история проверок
+- REST API на monitor + Swagger
+- gRPC `MonitorService` (protobuf / buf)
+- API Gateway: REST → gRPC, прокидывание `X-Request-ID`
+- gRPC interceptors: logging, recovery, request id через metadata
+- События проверок в Kafka → notification-сервис → Telegram
+- Миграции БД (goose), CI: тест + lint
 
-Для запуска с заданной версией:
+---
 
-```
-go run -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=v1.1.0-beta" ./cmd/monitor -config configs/config.yaml
-```
+## Архитектура
 
-Сайты для мониторинга хранятся в PostgreSQL и добавляются через API (`POST /api/v1/sites`), а не из YAML-конфига.
-### Сборка
-
-Версия приложения встраивается в бинарный файл через linker flag `-X`:
-
-```
-go build -ldflags "-X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=v1.1.0-beta" -o site-monitor.exe ./cmd/monitor
-```
-
-### Docker Compose
-
-```
-docker compose up --build
-```
-
-При старте сервис `migrate` применяет SQL-миграции, затем поднимается `site-monitor`.
-
-Остановка:
-
-```
-docker compose down
-```
-
-### Volumes
-
-Список volumes:
-
-```
-docker volume ls
+```text
+Клиент (curl / UI)
+        │  HTTP REST
+        ▼
+   API Gateway (:8082)
+        │  gRPC + metadata (x-request-id)
+        ▼
+   site-monitor (:8080 REST, :9090 gRPC)
+        │                │
+        ▼                ▼
+   PostgreSQL          Kafka
+                           │
+                           ▼
+                    notification (:8081)
+                           │
+                           ▼
+                       Telegram
 ```
 
-Остановка контейнеров и удаление volumes проекта:
+| Сервис | Роль |
+|--------|------|
+| `site-monitor` | Ядро: проверки, БД, REST, gRPC |
+| `gateway` | Внешний REST-вход, клиент к gRPC monitor |
+| `notification` | Consumer Kafka → Telegram |
+| `postgres` | Хранение сайтов и результатов |
+| `kafka` | Очередь событий проверок |
 
-```
-docker compose down -v
-```
+---
 
-Удалить конкретный volume вручную:
+## Быстрый старт
 
-```
-docker volume rm site-monitor_site-monitor-postgres-data
-```
+Требования: Docker + Docker Compose, скопированный `.env`.
 
-Имя volume может отличаться — смотреть `docker volume ls`.
+```bash
+cp .env.example .env
+# при необходимости поправь порты и NOTIFICATION_TG_*
 
-### Makefile
-
-Для упрощения типовых операций в корне проекта есть `Makefile`.
-
-Список команд:
-
-```
-make help
-```
-
-Основные цели:
-
-| Команда | Описание |
-|---------|----------|
-| `make build` | локальная сборка приложения |
-| `make docker-build` | сборка образов через Docker Compose |
-| `make clean` | очистка артефактов сборки |
-| `make run` | локальный запуск приложения |
-| `make up` | запуск всех сервисов (миграции применяются автоматически) |
-| `make down` | остановка сервисов |
-| `make restart` | перезапуск сервисов |
-| `make deps` | загрузка Go-зависимостей |
-| `make fmt` | форматирование кода |
-| `make lint` | запуск golangci-lint |
-| `make test` | запуск всех тестов |
-| `make test-verbose` | запуск всех тестов с подробным выводом |
-| `make test-cover` | запуск тестов с процентом покрытия |
-| `make test-cover-html` | HTML-отчёт о покрытии (`coverage.html`) |
-| `make migrate-up` | накатить следующую миграцию (один шаг) |
-| `make migrate-up-head` | накатить все новые миграции |
-| `make migrate-down` | откатить последнюю миграцию (один шаг) |
-| `make migrate-down-base` | откатить все миграции до нуля |
-| `make migrate-version` | текущая версия БД |
-| `make db-reset` | пересоздание БД (удаление volume) |
-| `make logs` | просмотр логов контейнеров |
-| `make ps` | статус контейнеров |
-| `make shell` | shell в контейнере приложения |
-
-Версию приложения можно задать через переменную `VERSION` (по умолчанию `dev`):
-
-```
-make build VERSION=v1.1.0-beta
-make up VERSION=v1.1.0-beta
-```
-
-### CI
-
-Конфигурация: `.gitlab-ci.yml`. Пайплайн запускается при push и при merge request.
-
-| Job | Что делает |
-|-----|------------|
-| `test` | unit-тесты и покрытие |
-| `lint` | golangci-lint по всему проекту |
-
-Правила линтера: `.golangci.yaml`. Локально: `make test`, `make lint`.
-
-### Миграции БД
-
-Миграции лежат в каталоге `migrations/` и применяются через [goose](https://github.com/pressly/goose).
-
-#### Установка goose
-
-Goose не лежит в `go.mod` приложения — запускается через `go run` с build-тегами (только postgres-драйвер):
-
-```
-make migrate-version
-```
-
-Эквивалент вручную:
-
-```
-go run -tags='no_clickhouse,no_libsql,no_mssql,no_mysql,no_sqlite3,no_vertica,no_ydb' github.com/pressly/goose/v3/cmd/goose@v3.27.2 version
-```
-
-#### Подключение к БД
-
-В `.env` две строки подключения:
-
-- `DATABASE_URL` — для приложения в Docker (`postgres:5432`, внутренняя сеть)
-- `MIGRATE_DATABASE_URL` — для goose с хоста (`localhost` + `POSTGRES_PORT`)
-
-Пример `.env`:
-
-```
-DB_USER=monitor
-DB_PASSWORD=monitor
-DB_NAME=site_monitor_db
-DB_SSLMODE=disable
-POSTGRES_PORT=5433
-
-DATABASE_URL=postgres://monitor:monitor@postgres:5432/site_monitor_db?sslmode=disable
-MIGRATE_DATABASE_URL=postgres://monitor:monitor@localhost:5433/site_monitor_db?sslmode=disable
-```
-
-Если `MIGRATE_DATABASE_URL` не задан, `Makefile` соберёт его автоматически из `DB_*` и `POSTGRES_PORT`.
-
-`make` автоматически подхватывает `.env` из корня проекта.
-
-#### Команды
-
-| Команда | Описание |
-|---------|----------|
-| `make migrate-up` | накатить следующую миграцию (один шаг) |
-| `make migrate-up-head` | накатить все новые миграции |
-| `make migrate-down` | откатить последнюю миграцию (один шаг) |
-| `make migrate-down-base` | откатить все миграции до нуля |
-| `make migrate-version` | показать текущую версию БД |
-
-Примеры:
-
-```
-make migrate-up-head
-make migrate-up
-make migrate-down
-make migrate-down-base
-make migrate-version
-```
-
-`migrate-version` показывает номер последней применённой миграции.
-
-#### Типовой сценарий
-
-1. Поднять стек (PostgreSQL + миграции + приложение):
-
-```
 make up
 ```
 
-Сервис `migrate` накатывает миграции автоматически до старта `site-monitor`.
+Стек поднимает Postgres, миграции, Kafka, monitor, gateway, notification.
 
-2. Проверить версию БД (с хоста):
+Проверка:
 
+```bash
+curl -s http://localhost:8082/health
+curl -s http://localhost:8082/api/v1/sites
 ```
-make migrate-version
+
+Остановка:
+
+```bash
+make down
 ```
 
-3. Полностью пересоздать БД (удалит данные; миграции накатятся в `db-reset`):
+Полный сброс БД (удалит volume):
 
-```
+```bash
 make db-reset
 ```
 
-Команды `make migrate-*` нужны для ручного управления схемой с хоста (локальная разработка без пересоздания контейнеров).
-#### Создание новой миграции
+---
 
+## Порты (по умолчанию из `.env.example`)
+
+| Порт | Сервис |
+|------|--------|
+| `8082` | Gateway REST |
+| `8080` | Monitor REST (+ Swagger) |
+| `9090` | Monitor gRPC |
+| `8081` | Notification health |
+| `5433` | Postgres на хосте |
+| `9092` | Kafka на хосте |
+
+Через gateway удобнее для «как снаружи». Прямой REST monitor — для отладки и Swagger: `http://localhost:8080/swagger/`.
+
+---
+
+## API (кратко)
+
+Базовый URL gateway: `http://localhost:8082`.
+
+| Метод | Путь | Описание |
+|-------|------|----------|
+| `GET` | `/health` | health gateway |
+| `GET` | `/api/v1/sites` | список сайтов |
+| `GET` | `/api/v1/sites/{id}` | сайт по id |
+| `POST` | `/api/v1/sites` | добавить сайт |
+| `DELETE` | `/api/v1/sites/{id}` | удалить |
+| `GET` | `/api/v1/sites/{id}/status` | последний статус |
+| `GET` | `/api/v1/sites/{id}/history` | история (`limit`, `offset`) |
+
+Примеры:
+
+```bash
+# создать
+curl -s -X POST http://localhost:8082/api/v1/sites \
+  -H 'Content-Type: application/json' \
+  -d '{"url":"https://example.com","name":"example"}'
+
+# список
+curl -s http://localhost:8082/api/v1/sites
+
+# статус / история
+curl -s http://localhost:8082/api/v1/sites/<id>/status
+curl -s 'http://localhost:8082/api/v1/sites/<id>/history?limit=10&offset=0'
 ```
+
+Тот же контракт сайтов есть на monitor (`:8080`, префикс `/api/v1/...`). Swagger: `http://localhost:8080/swagger/`.
+
+gRPC (локально, нужен [grpcurl](https://github.com/fullstorydev/grpcurl)):
+
+```bash
+grpcurl -plaintext localhost:9090 list
+grpcurl -plaintext localhost:9090 monitor.v1.MonitorService/GetSites
+```
+
+Proto: `proto/monitor/v1/`, генерация: `make proto`.
+
+---
+
+## Локальный запуск без Docker (только monitor)
+
+Нужны поднятые Postgres (и при необходимости Kafka) и актуальный `.env` / `configs/config.yaml`.
+
+```bash
+make migrate-up-head   # схема БД с хоста
+make run               # go run ./cmd/monitor
+```
+
+Сборка с версией:
+
+```bash
+make build VERSION=v1.0.0
+```
+
+Gateway локально:
+
+```bash
+go run ./cmd/gateway -config configs/gateway.yaml
+```
+
+---
+
+## Makefile
+
+Список всех целей: `make help`.
+
+| Команда | Описание |
+|---------|----------|
+| `make up` / `down` / `restart` | Docker Compose стек |
+| `make run` | локальный monitor |
+| `make build` | бинарник monitor |
+| `make docker-build` | сборка образов |
+| `make test` / `test-cover` | тесты |
+| `make lint` / `fmt` | линтер / формат |
+| `make proto` / `proto-lint` | codegen и lint protobuf |
+| `make migrate-up-head` | все миграции с хоста |
+| `make migrate-down` | откат на один шаг |
+| `make migrate-version` | версия схемы |
+| `make db-reset` | пересоздать БД и стек |
+| `make logs` / `ps` / `shell` | логи / статус / shell в app |
+
+Версия образа/бинарника: `VERSION=v1.0.0 make up`.
+
+---
+
+## Конфиг и переменные
+
+- Приложение: `configs/config.yaml`, gateway: `configs/gateway.yaml`
+- Окружение Compose: `.env` (образец — `.env.example`)
+- `DATABASE_URL` — для сервисов в Docker-сети
+- `MIGRATE_DATABASE_URL` — для goose с хоста (`localhost` + `POSTGRES_PORT`)
+- Telegram: `NOTIFICATION_TG_BOT_TOKEN`, `NOTIFICATION_TG_CHAT_ID`
+
+---
+
+## Миграции
+
+SQL в `migrations/`, инструмент — [goose](https://github.com/pressly/goose). В Compose сервис `migrate` накатывает схему до старта monitor.
+
+С хоста:
+
+```bash
 make migrate-up-head
+make migrate-version
 ```
 
-или:
+---
 
+## CI
+
+GitHub Actions: `.github/workflows/ci.yml` — `go test` (coverage) и `golangci-lint` на push в `main`/`dev` и на pull request.
+
+Локально: `make test`, `make lint`. Правила линтера: `.golangci.yaml`.
+
+---
+
+## Структура репозитория (фрагмент)
+
+```text
+cmd/monitor          — HTTP + gRPC сервис мониторинга
+cmd/gateway          — REST API Gateway
+cmd/notification     — consumer уведомлений
+internal/            — домен, use case, handlers, grpc, gateway, …
+proto/               — контракт MonitorService
+gen/                 — сгенерированный gRPC/protobuf код
+migrations/          — SQL-миграции
+configs/             — YAML-конфиги
+docs/                — Swagger
 ```
-go run -tags='no_clickhouse,no_libsql,no_mssql,no_mysql,no_sqlite3,no_vertica,no_ydb' \
-  github.com/pressly/goose/v3/cmd/goose@v3.27.2 -dir migrations create add_example_index sql
-```
 
-После этого отредактируйте созданный файл в `migrations/`: секции `-- +goose Up` и `-- +goose Down`.
+---
 
-### Генерация Swagger-документации
+## Лицензия
 
-Из корня проекта:
-
-```
-swag init -g cmd/monitor/main.go --parseInternal
-```
+[MIT](LICENSE)

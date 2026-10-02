@@ -9,10 +9,10 @@ import (
 
 	"github.com/google/uuid"
 
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler/site/dto"
-	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
+	domain "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/handler"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/handler/site/dto"
+	siteusecase "github.com/ViktorNikolaevichD/site-monitor/internal/usecase/site"
 )
 
 type getAllUseCase interface {

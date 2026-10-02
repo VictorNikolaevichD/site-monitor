@@ -5,7 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
-	site "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
+	site "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
 )
 
 type SiteResponse struct {

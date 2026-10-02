@@ -7,7 +7,7 @@ endif
 
 BINARY := site-monitor$(shell go env GOEXE)
 VERSION ?= dev
-LDFLAGS := -X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=$(VERSION)
+LDFLAGS := -X github.com/ViktorNikolaevichD/site-monitor/internal/buildinfo.Version=$(VERSION)
 MIGRATIONS_DIR := migrations
 GOOSE_VERSION ?= v3.27.2
 GOOSE_TAGS ?= no_clickhouse,no_libsql,no_mssql,no_mysql,no_sqlite3,no_vertica,no_ydb

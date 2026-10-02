@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/health"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/health"
 )
 
 func ToHealthResponse(report health.Report) HealthResponse {

@@ -5,7 +5,7 @@ import (
 
 	httpSwagger "github.com/swaggo/http-swagger/v2"
 
-	_ "gitlab.com/Dokuchaevvn/site-monitor/docs" // registers generated Swagger spec
+	_ "github.com/ViktorNikolaevichD/site-monitor/docs" // registers generated Swagger spec
 )
 
 func (h *Handler) RegisterRoutes(mux *http.ServeMux) {

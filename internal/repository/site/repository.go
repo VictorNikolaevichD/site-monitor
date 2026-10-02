@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
+	domain "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
 	"github.com/google/uuid"
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
 type Repository struct {

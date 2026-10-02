@@ -1,7 +1,7 @@
 package dto
 
 import (
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
+	domain "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
 )
 
 func ToSiteResponse(site domain.Site) SiteResponse {

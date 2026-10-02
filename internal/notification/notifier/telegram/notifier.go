@@ -9,8 +9,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/notifier"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/notifier"
 )
 
 type TelegramNotifier struct {

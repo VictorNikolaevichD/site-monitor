@@ -13,7 +13,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -trimpath \
-    -ldflags="-s -w -X gitlab.com/Dokuchaevvn/site-monitor/internal/buildinfo.Version=${VERSION}" \
+    -ldflags="-s -w -X github.com/ViktorNikolaevichD/site-monitor/internal/buildinfo.Version=${VERSION}" \
     -o /build/site-monitor \
     ./cmd/monitor
 
@@ -24,7 +24,7 @@ ARG VERSION=dev
 
 LABEL org.opencontainers.image.title="site-monitor" \
       org.opencontainers.image.description="HTTP service for site availability monitoring" \
-      org.opencontainers.image.source="https://gitlab.com/Dokuchaevvn/site-monitor" \
+      org.opencontainers.image.source="https://github.com/ViktorNikolaevichD/site-monitor" \
       org.opencontainers.image.version="${VERSION}"
 
 RUN apk add --no-cache ca-certificates \

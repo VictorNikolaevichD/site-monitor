@@ -12,7 +12,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build \
     -trimpath \
-    -ldflags="-s -w -X gitlab.com/Dokuchaevvn/site-monitor/internal/notification/buildinfo.Version=${VERSION}" \
+    -ldflags="-s -w -X github.com/ViktorNikolaevichD/site-monitor/internal/notification/buildinfo.Version=${VERSION}" \
     -o /build/notification \
     ./cmd/notification
 
@@ -23,7 +23,7 @@ ARG VERSION=dev
 
 LABEL org.opencontainers.image.title="notification" \
       org.opencontainers.image.description="Notification service" \
-      org.opencontainers.image.source="https://gitlab.com/Dokuchaevvn/site-monitor" \
+      org.opencontainers.image.source="https://github.com/ViktorNikolaevichD/site-monitor" \
       org.opencontainers.image.version="${VERSION}"
 
 RUN apk add --no-cache ca-certificates \

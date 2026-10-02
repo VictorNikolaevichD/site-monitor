@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/messaging"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/notifier"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/messaging"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/notifier"
 )
 
 type Notifier interface {

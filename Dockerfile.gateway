@@ -23,7 +23,7 @@ ARG VERSION=dev
 
 LABEL org.opencontainers.image.title="gateway" \
       org.opencontainers.image.description="Gateway service" \
-      org.opencontainers.image.source="https://gitlab.com/Dokuchaevvn/site-monitor" \
+      org.opencontainers.image.source="https://github.com/ViktorNikolaevichD/site-monitor" \
       org.opencontainers.image.version="${VERSION}"
 
 RUN apk add --no-cache ca-certificates \

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler/ping/dto"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/handler/ping/dto"
 )
 
 type Handler struct{}

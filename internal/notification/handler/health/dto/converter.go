@@ -1,6 +1,6 @@
 package dto
 
-import "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/health"
+import "github.com/ViktorNikolaevichD/site-monitor/internal/notification/health"
 
 func ToHealthResponse(report health.Report) HealthResponse {
 	return HealthResponse{

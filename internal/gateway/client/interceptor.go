@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"time"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/middleware"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/middleware"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"

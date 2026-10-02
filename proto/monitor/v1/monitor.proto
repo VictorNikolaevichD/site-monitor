@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package monitor.v1;
 
-option go_package = "gitlab.com/Dokuchaevvn/site-monitor/gen/go/monitor/v1;monitorv1";
+option go_package = "github.com/ViktorNikolaevichD/site-monitor/gen/go/monitor/v1;monitorv1";
 
 import "google/protobuf/timestamp.proto";
 

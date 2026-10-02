@@ -3,7 +3,7 @@ package dto
 import (
 	"time"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/health"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/health"
 )
 
 type HealthResponse struct {

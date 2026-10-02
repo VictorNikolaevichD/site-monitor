@@ -5,12 +5,12 @@ import (
 	"log/slog"
 	"time"
 
+	checker "github.com/ViktorNikolaevichD/site-monitor/internal/checker"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/db"
+	domain "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/messaging"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
-	checker "gitlab.com/Dokuchaevvn/site-monitor/internal/checker"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/messaging"
 )
 
 type siteRepository interface {

@@ -3,10 +3,10 @@ package monitor
 import (
 	"context"
 
+	monitorv1 "github.com/ViktorNikolaevichD/site-monitor/gen/go/monitor/v1"
+	domain "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
+	siteusecase "github.com/ViktorNikolaevichD/site-monitor/internal/usecase/site"
 	"github.com/google/uuid"
-	monitorv1 "gitlab.com/Dokuchaevvn/site-monitor/gen/go/monitor/v1"
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
-	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )

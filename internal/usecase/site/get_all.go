@@ -3,9 +3,9 @@ package site
 import (
 	"context"
 
+	"github.com/ViktorNikolaevichD/site-monitor/internal/db"
+	domain "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/db"
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
 )
 
 type getAllRepository interface {

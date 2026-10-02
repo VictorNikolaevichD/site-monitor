@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler/health/dto"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/health"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/handler/health/dto"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/health"
 )
 
 type healthChecker interface {

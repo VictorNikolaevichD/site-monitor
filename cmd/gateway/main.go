@@ -11,11 +11,11 @@ import (
 	"syscall"
 	"time"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/gateway/client"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/gateway/config"
-	sitehandler "gitlab.com/Dokuchaevvn/site-monitor/internal/gateway/handler/site"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/gateway/server"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/middleware"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/gateway/client"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/gateway/config"
+	sitehandler "github.com/ViktorNikolaevichD/site-monitor/internal/gateway/handler/site"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/gateway/server"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/middleware"
 )
 
 func main() {

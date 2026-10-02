@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/gateway/config"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/gateway/config"
 )
 
 func NewServer(cfg *config.Config, logger *slog.Logger, handler http.Handler) *http.Server {

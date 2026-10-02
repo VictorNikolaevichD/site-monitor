@@ -1,4 +1,4 @@
-module gitlab.com/Dokuchaevvn/site-monitor
+module github.com/ViktorNikolaevichD/site-monitor
 
 go 1.26.3
 

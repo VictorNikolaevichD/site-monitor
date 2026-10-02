@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
+	domain "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/handler/site/mocks"
 	"github.com/google/uuid"
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler/site/mocks"
 )
 
 var exampleUUID, _ = uuid.Parse("550e8400-e29b-41d4-a716-446655440000")

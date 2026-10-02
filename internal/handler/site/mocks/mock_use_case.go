@@ -3,8 +3,8 @@ package mocks
 import (
 	"context"
 
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
-	siteusecase "gitlab.com/Dokuchaevvn/site-monitor/internal/usecase/site"
+	domain "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
+	siteusecase "github.com/ViktorNikolaevichD/site-monitor/internal/usecase/site"
 )
 
 type Controller struct {

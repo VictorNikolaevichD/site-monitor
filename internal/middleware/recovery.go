@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/handler"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/handler"
 )
 
 func Recovery(next http.Handler, logger *slog.Logger) http.Handler {

@@ -3,8 +3,8 @@ package monitor
 import (
 	"math"
 
-	monitorv1 "gitlab.com/Dokuchaevvn/site-monitor/gen/go/monitor/v1"
-	domain "gitlab.com/Dokuchaevvn/site-monitor/internal/domain/site"
+	monitorv1 "github.com/ViktorNikolaevichD/site-monitor/gen/go/monitor/v1"
+	domain "github.com/ViktorNikolaevichD/site-monitor/internal/domain/site"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

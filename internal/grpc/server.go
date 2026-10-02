@@ -5,7 +5,7 @@ import (
 	"log/slog"
 	"net"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/grpc/interceptor"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/grpc/interceptor"
 	"google.golang.org/grpc"
 )
 

@@ -6,7 +6,7 @@ import (
 	"log/slog"
 	"time"
 
-	monitorv1 "gitlab.com/Dokuchaevvn/site-monitor/gen/go/monitor/v1"
+	monitorv1 "github.com/ViktorNikolaevichD/site-monitor/gen/go/monitor/v1"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/backoff"
 	"google.golang.org/grpc/connectivity"

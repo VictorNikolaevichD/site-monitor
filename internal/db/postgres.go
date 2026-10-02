@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/ViktorNikolaevichD/site-monitor/internal/config"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/config"
 )
 
 func OpenPostgres(ctx context.Context, cfg config.Database) (*pgxpool.Pool, error) {

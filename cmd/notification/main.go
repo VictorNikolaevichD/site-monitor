@@ -10,17 +10,17 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/buildinfo"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/config"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/handler"
+	eventhandler "github.com/ViktorNikolaevichD/site-monitor/internal/notification/handler/event"
+	healthhandler "github.com/ViktorNikolaevichD/site-monitor/internal/notification/handler/health"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/health"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/messaging"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/notifier"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/notifier/telegram"
+	httpserver "github.com/ViktorNikolaevichD/site-monitor/internal/notification/server/http"
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/buildinfo"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/config"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler"
-	eventhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler/event"
-	healthhandler "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/handler/health"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/health"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/messaging"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/notifier"
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/notifier/telegram"
-	httpserver "gitlab.com/Dokuchaevvn/site-monitor/internal/notification/server/http"
 )
 
 func main() {

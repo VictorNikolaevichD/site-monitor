@@ -10,7 +10,7 @@ import (
 
 	"github.com/segmentio/kafka-go"
 
-	"gitlab.com/Dokuchaevvn/site-monitor/internal/notification/config"
+	"github.com/ViktorNikolaevichD/site-monitor/internal/notification/config"
 )
 
 type EventHandler func(ctx context.Context, event SiteCheckEvent) error
