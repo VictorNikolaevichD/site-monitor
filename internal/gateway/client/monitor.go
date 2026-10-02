@@ -38,6 +38,9 @@ func NewMonitorClient(
 			Backoff:           backoff.DefaultConfig,
 			MinConnectTimeout: 5 * time.Second,
 		}),
+		grpc.WithChainUnaryInterceptor(
+			UnaryClientLogging(logger),
+		),
 	)
 	if err != nil {
 		return nil, nil, fmt.Errorf("dial monitor grpc %s: %w", addr, err)

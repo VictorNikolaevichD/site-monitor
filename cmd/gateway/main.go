@@ -15,6 +15,7 @@ import (
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/gateway/config"
 	sitehandler "gitlab.com/Dokuchaevvn/site-monitor/internal/gateway/handler/site"
 	"gitlab.com/Dokuchaevvn/site-monitor/internal/gateway/server"
+	"gitlab.com/Dokuchaevvn/site-monitor/internal/middleware"
 )
 
 func main() {
@@ -50,7 +51,9 @@ func main() {
 	siteHandler := sitehandler.NewHandler(monitorClient)
 	siteHandler.RegisterRoutes(mux)
 
-	httpServer := server.NewServer(cfg, logger, mux)
+	httpHandler := middleware.RequestID(mux)
+
+	httpServer := server.NewServer(cfg, logger, httpHandler)
 	go runServer(httpServer, cfg, logger)
 
 	sig := <-signals
