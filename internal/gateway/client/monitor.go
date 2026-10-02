@@ -15,6 +15,7 @@ import (
 )
 
 type MonitorClient struct {
+	conn    *grpc.ClientConn
 	raw     monitorv1.MonitorServiceClient
 	timeout time.Duration
 	logger  *slog.Logger
@@ -60,10 +61,15 @@ func NewMonitorClient(
 
 	raw := monitorv1.NewMonitorServiceClient(conn)
 	return &MonitorClient{
+		conn:    conn,
 		raw:     raw,
 		timeout: timeout,
 		logger:  logger,
 	}, conn, nil
+}
+
+func (c *MonitorClient) Ready() bool {
+	return c.conn.GetState() == connectivity.Ready
 }
 
 func (c *MonitorClient) GetSite(ctx context.Context, id string) (*monitorv1.GetSiteResponse, error) {

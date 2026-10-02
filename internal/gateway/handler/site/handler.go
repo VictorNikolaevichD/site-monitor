@@ -10,6 +10,7 @@ import (
 )
 
 type MonitorClient interface {
+	Ready() bool
 	GetSite(ctx context.Context, id string) (*monitorv1.GetSiteResponse, error)
 	GetSites(ctx context.Context) (*monitorv1.GetSitesResponse, error)
 	CreateSite(ctx context.Context, url, name string) (*monitorv1.CreateSiteResponse, error)
@@ -26,6 +27,15 @@ func NewHandler(monitor MonitorClient) *Handler {
 	return &Handler{
 		monitor: monitor,
 	}
+}
+
+func (h *Handler) Health(w http.ResponseWriter, r *http.Request) {
+	if !h.monitor.Ready() {
+		writeError(w, http.StatusServiceUnavailable, "monitor unavailable")
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(map[string]bool{"ok": true})
 }
 
 func (h *Handler) GetSite(w http.ResponseWriter, r *http.Request) {
