@@ -72,8 +72,8 @@ make up
 Стек: Postgres, миграции, Kafka, monitor, gateway, notification.
 
 ```bash
-curl -s http://localhost:8082/health
-curl -s http://localhost:8082/api/v1/sites
+curl -s 'http://localhost:8082/health'
+curl -s 'http://localhost:8082/api/v1/sites'
 ```
 
 ```bash
@@ -116,13 +116,13 @@ Swagger monitor: `http://localhost:8080/swagger/`.
 | `GET` | `/api/v1/sites/{id}/history` | история (`limit`, `offset`) |
 
 ```bash
-curl -s -X POST http://localhost:8082/api/v1/sites \
+curl -s -X POST 'http://localhost:8082/api/v1/sites' \
   -H 'Content-Type: application/json' \
   -d '{"url":"https://example.com","name":"example"}'
 
-curl -s http://localhost:8082/api/v1/sites
+curl -s 'http://localhost:8082/api/v1/sites'
 
-curl -s http://localhost:8082/api/v1/sites/<id>/status
+curl -s 'http://localhost:8082/api/v1/sites/<id>/status'
 curl -s 'http://localhost:8082/api/v1/sites/<id>/history?limit=10&offset=0'
 ```
 
