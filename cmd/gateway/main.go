@@ -34,7 +34,7 @@ func main() {
 	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 	defer signal.Stop(signals)
 
-	monitorClient, conn, err := client.NewMonitorClient(cfg.GRPCAddr)
+	monitorClient, conn, err := client.NewMonitorClient(cfg.GRPCAddr, cfg.GRPCTimeout, logger)
 	if err != nil {
 		logger.Error("failed to create gRPC client", "error", err)
 		return

@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/caarlos0/env/v11"
 	"github.com/joho/godotenv"
@@ -13,11 +14,12 @@ import (
 )
 
 type Config struct {
-	HTTPAddr        string `yaml:"http_addr"`
-	GRPCAddr        string `yaml:"grpc_addr"`
-	LogLevel        string `yaml:"log_level" env:"LOG_LEVEL"`
-	GatewayPort     int    `yaml:"-" env:"GATEWAY_PORT"`
-	MonitorGRPCAddr string `yaml:"-" env:"MONITOR_GRPC_ADDR"`
+	HTTPAddr        string        `yaml:"http_addr"`
+	GRPCAddr        string        `yaml:"grpc_addr"`
+	GRPCTimeout     time.Duration `yaml:"grpc_timeout"`
+	LogLevel        string        `yaml:"log_level" env:"LOG_LEVEL"`
+	GatewayPort     int           `yaml:"-" env:"GATEWAY_PORT"`
+	MonitorGRPCAddr string        `yaml:"-" env:"MONITOR_GRPC_ADDR"`
 }
 
 func Load(path string) (*Config, error) {
@@ -54,6 +56,10 @@ func (c *Config) Validate() error {
 
 	if strings.TrimSpace(c.GRPCAddr) == "" {
 		return errors.New("grpc_addr is required")
+	}
+
+	if c.GRPCTimeout <= 0 {
+		return errors.New("grpc_timeout is required")
 	}
 
 	if _, err := parseLogLevel(c.LogLevel); err != nil {

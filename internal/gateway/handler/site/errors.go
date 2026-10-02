@@ -31,6 +31,10 @@ func mapGRPCError(err error) (int, string) {
 		return http.StatusNotFound, st.Message()
 	case codes.AlreadyExists:
 		return http.StatusConflict, st.Message()
+	case codes.Unavailable:
+		return http.StatusBadGateway, "monitor service unavailable"
+	case codes.DeadlineExceeded:
+		return http.StatusGatewayTimeout, "monitor service timeout"
 	default:
 		return http.StatusInternalServerError, "internal server error"
 	}

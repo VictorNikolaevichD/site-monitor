@@ -1,6 +1,7 @@
 package site
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -8,18 +9,47 @@ import (
 	monitorv1 "gitlab.com/Dokuchaevvn/site-monitor/gen/go/monitor/v1"
 )
 
-type Handler struct {
-	monitor monitorv1.MonitorServiceClient
+type MonitorClient interface {
+	GetSite(ctx context.Context, id string) (*monitorv1.GetSiteResponse, error)
+	GetSites(ctx context.Context) (*monitorv1.GetSitesResponse, error)
+	CreateSite(ctx context.Context, url, name string) (*monitorv1.CreateSiteResponse, error)
+	DeleteSite(ctx context.Context, id string) (*monitorv1.DeleteSiteResponse, error)
+	GetSiteStatus(ctx context.Context, id string) (*monitorv1.GetSiteStatusResponse, error)
+	GetSiteHistory(ctx context.Context, id string, limit, offset int32) (*monitorv1.GetSiteHistoryResponse, error)
 }
 
-func NewHandler(monitor monitorv1.MonitorServiceClient) *Handler {
+type Handler struct {
+	monitor MonitorClient
+}
+
+func NewHandler(monitor MonitorClient) *Handler {
 	return &Handler{
 		monitor: monitor,
 	}
 }
 
+func (h *Handler) GetSite(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+
+	resp, err := h.monitor.GetSite(r.Context(), id)
+	if err != nil {
+		code, msg := mapGRPCError(err)
+		writeError(w, code, msg)
+		return
+	}
+
+	site := resp.GetSite()
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	_ = json.NewEncoder(w).Encode(map[string]string{
+		"id":   site.GetId(),
+		"url":  site.GetUrl(),
+		"name": site.GetName(),
+	})
+}
+
 func (h *Handler) GetAll(w http.ResponseWriter, r *http.Request) {
-	resp, err := h.monitor.GetSites(r.Context(), &monitorv1.GetSitesRequest{})
+	resp, err := h.monitor.GetSites(r.Context())
 	if err != nil {
 		code, msg := mapGRPCError(err)
 		writeError(w, code, msg)
@@ -52,10 +82,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp, err := h.monitor.CreateSite(r.Context(), &monitorv1.CreateSiteRequest{
-		Url:  body.URL,
-		Name: body.Name,
-	})
+	resp, err := h.monitor.CreateSite(r.Context(), body.URL, body.Name)
 	if err != nil {
 		code, msg := mapGRPCError(err)
 		writeError(w, code, msg)
@@ -75,7 +102,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	_, err := h.monitor.DeleteSite(r.Context(), &monitorv1.DeleteSiteRequest{Id: id})
+	_, err := h.monitor.DeleteSite(r.Context(), id)
 	if err != nil {
 		code, msg := mapGRPCError(err)
 		writeError(w, code, msg)
@@ -88,7 +115,7 @@ func (h *Handler) DeleteByID(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) GetStatusByID(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	resp, err := h.monitor.GetSiteStatus(r.Context(), &monitorv1.GetSiteStatusRequest{Id: id})
+	resp, err := h.monitor.GetSiteStatus(r.Context(), id)
 	if err != nil {
 		code, msg := mapGRPCError(err)
 		writeError(w, code, msg)
@@ -137,11 +164,7 @@ func (h *Handler) GetHistoryByID(w http.ResponseWriter, r *http.Request) {
 		offset = int32(n)
 	}
 
-	resp, err := h.monitor.GetSiteHistory(r.Context(), &monitorv1.GetSiteHistoryRequest{
-		Id:     id,
-		Limit:  limit,
-		Offset: offset,
-	})
+	resp, err := h.monitor.GetSiteHistory(r.Context(), id, limit, offset)
 	if err != nil {
 		code, msg := mapGRPCError(err)
 		writeError(w, code, msg)
