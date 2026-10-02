@@ -1,12 +1,17 @@
 # site-monitor
 
 [![CI](https://github.com/ViktorNikolaevichD/site-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/ViktorNikolaevichD/site-monitor/actions/workflows/ci.yml)
+[![Go](https://img.shields.io/badge/Go-00ADD8?logo=go&logoColor=white)](#)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)](#)
+[![Kafka](https://img.shields.io/badge/Kafka-231F20?logo=apachekafka&logoColor=white)](#)
+[![gRPC](https://img.shields.io/badge/gRPC-244c5a?logo=grpc&logoColor=white)](#)
+[![Docker](https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white)](#)
+[![Telegram](https://img.shields.io/badge/Telegram-26A5E4?logo=telegram&logoColor=white)](#)
+[![GitHub Actions](https://img.shields.io/badge/GitHub%20Actions-2088FF?logo=githubactions&logoColor=white)](#)
 
 Сервис мониторинга доступности сайтов на Go.
 
-Периодически проверяет URL по HTTP, хранит результаты в PostgreSQL, отдаёт API (REST и gRPC), публикует события в Kafka и шлёт уведомления в Telegram. Снаружи удобнее ходить через REST API Gateway, который проксирует вызовы в monitor по gRPC.
-
-**Стек:** Go · PostgreSQL · Kafka · gRPC · Docker Compose · goose · slog
+Периодически проверяет URL по HTTP, хранит результаты в PostgreSQL, отдаёт API (REST и gRPC), публикует события в Kafka и отправляет уведомления в Telegram. REST API Gateway проксирует внешние запросы в monitor по gRPC.
 
 ---
 
@@ -57,31 +62,23 @@
 
 ## Быстрый старт
 
-Требования: Docker + Docker Compose, скопированный `.env`.
+Требования: Docker, Docker Compose, файл `.env`.
 
 ```bash
 cp .env.example .env
-# при необходимости поправь порты и NOTIFICATION_TG_*
-
 make up
 ```
 
-Стек поднимает Postgres, миграции, Kafka, monitor, gateway, notification.
-
-Проверка:
+Стек: Postgres, миграции, Kafka, monitor, gateway, notification.
 
 ```bash
 curl -s http://localhost:8082/health
 curl -s http://localhost:8082/api/v1/sites
 ```
 
-Остановка:
-
 ```bash
 make down
 ```
-
-Полный сброс БД (удалит volume):
 
 ```bash
 make db-reset
@@ -89,22 +86,22 @@ make db-reset
 
 ---
 
-## Порты (по умолчанию из `.env.example`)
+## Порты
 
 | Порт | Сервис |
 |------|--------|
 | `8082` | Gateway REST |
-| `8080` | Monitor REST (+ Swagger) |
+| `8080` | Monitor REST, Swagger |
 | `9090` | Monitor gRPC |
 | `8081` | Notification health |
-| `5433` | Postgres на хосте |
-| `9092` | Kafka на хосте |
+| `5433` | Postgres (хост) |
+| `9092` | Kafka (хост) |
 
-Через gateway удобнее для «как снаружи». Прямой REST monitor — для отладки и Swagger: `http://localhost:8080/swagger/`.
+Swagger monitor: `http://localhost:8080/swagger/`.
 
 ---
 
-## API (кратко)
+## API
 
 Базовый URL gateway: `http://localhost:8082`.
 
@@ -118,51 +115,42 @@ make db-reset
 | `GET` | `/api/v1/sites/{id}/status` | последний статус |
 | `GET` | `/api/v1/sites/{id}/history` | история (`limit`, `offset`) |
 
-Примеры:
-
 ```bash
-# создать
 curl -s -X POST http://localhost:8082/api/v1/sites \
   -H 'Content-Type: application/json' \
   -d '{"url":"https://example.com","name":"example"}'
 
-# список
 curl -s http://localhost:8082/api/v1/sites
 
-# статус / история
 curl -s http://localhost:8082/api/v1/sites/<id>/status
 curl -s 'http://localhost:8082/api/v1/sites/<id>/history?limit=10&offset=0'
 ```
 
-Тот же контракт сайтов есть на monitor (`:8080`, префикс `/api/v1/...`). Swagger: `http://localhost:8080/swagger/`.
+Тот же REST по сайтам доступен на monitor (`:8080`, `/api/v1/...`).
 
-gRPC (локально, нужен [grpcurl](https://github.com/fullstorydev/grpcurl)):
+gRPC ([grpcurl](https://github.com/fullstorydev/grpcurl)):
 
 ```bash
 grpcurl -plaintext localhost:9090 list
 grpcurl -plaintext localhost:9090 monitor.v1.MonitorService/GetSites
 ```
 
-Proto: `proto/monitor/v1/`, генерация: `make proto`.
+Proto: `proto/monitor/v1/`. Генерация: `make proto`.
 
 ---
 
-## Локальный запуск без Docker (только monitor)
+## Локальный запуск без Docker
 
-Нужны поднятые Postgres (и при необходимости Kafka) и актуальный `.env` / `configs/config.yaml`.
+Нужны Postgres (и при необходимости Kafka), `.env` и `configs/config.yaml`.
 
 ```bash
-make migrate-up-head   # схема БД с хоста
-make run               # go run ./cmd/monitor
+make migrate-up-head
+make run
 ```
-
-Сборка с версией:
 
 ```bash
 make build VERSION=v1.0.0
 ```
-
-Gateway локально:
 
 ```bash
 go run ./cmd/gateway -config configs/gateway.yaml
@@ -172,7 +160,7 @@ go run ./cmd/gateway -config configs/gateway.yaml
 
 ## Makefile
 
-Список всех целей: `make help`.
+`make help` — полный список целей.
 
 | Команда | Описание |
 |---------|----------|
@@ -189,25 +177,24 @@ go run ./cmd/gateway -config configs/gateway.yaml
 | `make db-reset` | пересоздать БД и стек |
 | `make logs` / `ps` / `shell` | логи / статус / shell в app |
 
-Версия образа/бинарника: `VERSION=v1.0.0 make up`.
+Версия: `VERSION=v1.0.0 make up`.
 
 ---
 
 ## Конфиг и переменные
 
-- Приложение: `configs/config.yaml`, gateway: `configs/gateway.yaml`
-- Окружение Compose: `.env` (образец — `.env.example`)
-- `DATABASE_URL` — для сервисов в Docker-сети
-- `MIGRATE_DATABASE_URL` — для goose с хоста (`localhost` + `POSTGRES_PORT`)
-- Telegram: `NOTIFICATION_TG_BOT_TOKEN`, `NOTIFICATION_TG_CHAT_ID`
+- `configs/config.yaml` — monitor
+- `configs/gateway.yaml` — gateway
+- `.env` — окружение Compose (образец: `.env.example`)
+- `DATABASE_URL` — сервисы в Docker-сети
+- `MIGRATE_DATABASE_URL` — goose с хоста (`localhost` + `POSTGRES_PORT`)
+- `NOTIFICATION_TG_BOT_TOKEN`, `NOTIFICATION_TG_CHAT_ID` — Telegram
 
 ---
 
 ## Миграции
 
-SQL в `migrations/`, инструмент — [goose](https://github.com/pressly/goose). В Compose сервис `migrate` накатывает схему до старта monitor.
-
-С хоста:
+SQL в `migrations/`, инструмент — [goose](https://github.com/pressly/goose). В Compose сервис `migrate` применяет схему до старта monitor.
 
 ```bash
 make migrate-up-head
@@ -218,13 +205,13 @@ make migrate-version
 
 ## CI
 
-GitHub Actions: `.github/workflows/ci.yml` — `go test` (coverage) и `golangci-lint` на push в `main`/`dev` и на pull request.
+`.github/workflows/ci.yml`: `go test` (coverage) и `golangci-lint` на push в `main`/`dev` и на pull request.
 
-Локально: `make test`, `make lint`. Правила линтера: `.golangci.yaml`.
+Локально: `make test`, `make lint`. Правила: `.golangci.yaml`.
 
 ---
 
-## Структура репозитория (фрагмент)
+## Структура репозитория
 
 ```text
 cmd/monitor          — HTTP + gRPC сервис мониторинга
