@@ -4,9 +4,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"time"
 
 	"github.com/ViktorNikolaevichD/site-monitor/internal/grpc/interceptor"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 )
 
 type Server struct {
@@ -17,6 +19,10 @@ type Server struct {
 
 func NewServer(addr string, logger *slog.Logger, register func(*grpc.Server)) *Server {
 	s := grpc.NewServer(
+		grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			MinTime:             30 * time.Second,
+			PermitWithoutStream: true,
+		}),
 		grpc.ChainUnaryInterceptor(
 			interceptor.UnaryRecover(logger),
 			interceptor.UnaryLogging(logger),

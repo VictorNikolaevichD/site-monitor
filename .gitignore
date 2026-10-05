@@ -12,6 +12,11 @@
 .go/
 .gocache/
 
+# Агенты
+.cursor/
+.cursorignore
+claude
+
 # Тестовые бинарники
 *.test
 

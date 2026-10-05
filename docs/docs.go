@@ -23,7 +23,87 @@ const docTemplate = `{
     "paths": {
         "/health": {
             "get": {
-                "description": "Возвращает статус, uptime, текущее время и версию приложения",
+                "description": "Пингует Postgres. 200, если база доступна, и 503, если нет. Тот же ответ на /health/ready. Сбой базы не должен перезапускать процесс.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Проверить готовность к работе",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор запроса для трассировки",
+                        "name": "X-Request-ID",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HealthResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/dto.HealthResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health/live": {
+            "get": {
+                "description": "Не проверяет Postgres и Kafka. 200 означает, что HTTP-сервер обрабатывает запросы. Этот путь использует liveness probe.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "system"
+                ],
+                "summary": "Проверить, что процесс жив",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Идентификатор запроса для трассировки",
+                        "name": "X-Request-ID",
+                        "in": "header"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.LiveResponse"
+                        },
+                        "headers": {
+                            "X-Request-ID": {
+                                "type": "string",
+                                "description": "Идентификатор запроса"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/health/ready": {
+            "get": {
+                "description": "Пингует Postgres. 200, если база доступна, и 503, если нет. Сбой базы не должен перезапускать процесс.",
                 "produces": [
                     "application/json"
                 ],
@@ -557,6 +637,15 @@ const docTemplate = `{
                 "version": {
                     "type": "string",
                     "example": "v1.0.0"
+                }
+            }
+        },
+        "dto.LiveResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "example": "healthy"
                 }
             }
         },
